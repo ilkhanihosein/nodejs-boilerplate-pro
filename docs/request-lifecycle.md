@@ -1,85 +1,74 @@
 # HTTP request lifecycle
 
-End-to-end flow from the first application middleware on **`createApp()`** through response completion and optional error handling. Use this with [logging.md](./logging.md) and [validation.md](./validation.md).
+Global middleware order is **stable infrastructure**—change it only when you know how it affects logging, ALS, and error handling.
+
+Order of execution from **`createApp()`** through the response and optional **`errorHandler`**. For **log line shapes and responsibilities**, see [logging.md](./logging.md) (this file does not duplicate that content).
 
 ---
 
-## Global middleware order (`src/app.ts`)
+## Middleware sequence (`src/app.ts`)
 
-Before the API-specific stack below, Express runs **Helmet** and **CORS** (security and browser policy). Then, in order:
+After **Helmet** and **CORS**:
 
-| Order   | Middleware                        | Responsibility                                                                                                                                 |
-| ------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1       | **`bindRequestContext`**          | Wall-clock start for duration (`requestStartedAtMs`), **`ensureRequestId`** (`req.id`, `X-Request-Id`), **`runWithContext`** (ALS `requestId`) |
-| 2       | **`httpLogger`** (`pino-http`)    | **`genReqId` → `ensureRequestId`** (idempotent); **no** auto access/error lines (`autoLogging: false`)                                         |
-| 3       | **`requestLifecycleLogger`**      | Log **start**; register **`finish` / `close`** → log **complete** with `statusCode` + `durationMs`                                             |
-| 4       | **`httpRateLimiter`**             | Rate limiting                                                                                                                                  |
-| 5       | **`express.json` / `urlencoded`** | Body parsers                                                                                                                                   |
-| Routers | Feature routes                    | May include **`validateRequest`**, auth, controllers                                                                                           |
-| Last    | **404** handler                   | Plain JSON not found                                                                                                                           |
-| Final   | **`errorHandler`**                | Maps errors to responses; logs **unhandled** errors once                                                                                       |
+| Step | Middleware                            | Responsibility                                                                                                            |
+| ---- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **`bindRequestContext`**              | **`requestStartedAtMs`**, **`ensureRequestId`** → **`req.id`**, **`X-Request-Id`**, **`runWithContext(requestId)`** (ALS) |
+| 2    | **`httpLogger`** (`pino-http`)        | **`genReqId`** / **`ensureRequestId`** (idempotent); **`autoLogging: false`**                                             |
+| 3    | **`requestLifecycleLogger`**          | Log **`phase: "start"`**; register **`finish`** / **`close`** → one **`phase: "complete"`** line                          |
+| 4    | **`httpRateLimiter`**                 | Rate limiting                                                                                                             |
+| 5    | **`express.json`** / **`urlencoded`** | Body parsing                                                                                                              |
+| —    | Feature routers                       | Optional **`validateRequest`**, auth, controllers                                                                         |
+| —    | **404** handler                       | JSON not found                                                                                                            |
+| last | **`errorHandler`**                    | Map errors to responses; **unhandled** branch logs once (see logging doc)                                                 |
 
-Anything that runs **after** `bindRequestContext` and calls **`next()`** inside the same synchronous chain (and normal async continuations from that request) sees the same **ALS** store until the store is exited (end of the `runWithContext` callback wraps the whole downstream middleware chain).
+Downstream code that runs inside the same **`runWithContext`** callback sees the same ALS store for the lifetime of that request chain (subject to async caveats in [async-context.md](./async-context.md)).
 
 ---
 
-## Step-by-step (happy path)
+## Happy path (ASCII)
 
 ```
 Client
   │
   ▼
-┌─────────────────────────────────────┐
-│ Helmet + CORS (global)              │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ Helmet + CORS       │
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 1. bindRequestContext               │
-│    • requestStartedAtMs = Date.now() │
-│    • ensureRequestId → req.id, hdr │
-│    • runWithContext(requestId)     │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ bindRequestContext  │
+│ time + req.id + ALS │
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 2. httpLogger (pino-http)           │
-│    • genReqId / ensureRequestId    │
-│    • no autoLogging lines           │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ httpLogger          │
+│ (id wiring only)    │
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 3. requestLifecycleLogger           │
-│    • LOG phase=start (info)        │
-│    • register finish/close once   │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ requestLifecycle    │
+│ LOG start           │
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 4. Rate limit + body parsers        │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ limiter + parsers   │
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 5. Route stack                      │
-│    • validateRequest (optional)     │
-│      → req.validated.*              │
-│    • auth / other middleware        │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ routes / validate   │
+│ controller / service│
+└─────────────────────┘
   │
   ▼
-┌─────────────────────────────────────┐
-│ 6. Controller → service → model   │
-│    • getLogger() includes requestId │
-└─────────────────────────────────────┘
-  │
-  ▼
-┌─────────────────────────────────────┐
-│ 7. Response sent                    │
-│    • res.on('finish'|'close')      │
-│    • LOG phase=complete + duration │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│ response end        │
+│ LOG complete        │
+└─────────────────────┘
   │
   ▼
  Client
@@ -87,69 +76,59 @@ Client
 
 ---
 
-## Error path vs success path
+## Success vs error
 
-### A) **Zod or other handled errors** (`next(err)` before headers sent)
+### Handled error (`next(err)` before headers sent)
 
-1. Control jumps to **`errorHandler`**.
-2. Handler sends the appropriate **4xx/409** (etc.) JSON.
-3. Response still ends “normally” from the server’s perspective → **`requestLifecycleLogger`** fires **complete** with that **status code** (often **`warn`** for 4xx).
-4. **No** “unhandled_error” pino line for these types.
+Control passes to **`errorHandler`**, which sends the appropriate status and JSON. The response still completes normally → **lifecycle** logs **`complete`** with that status (often **`warn`** for 4xx). **No** final “unhandled” error log line for those types.
 
-### B) **Unhandled thrown / passed error** (not `AppError` / Zod / known Mongoose cases)
+### Unhandled error
 
-1. **`errorHandler`** final branch runs.
-2. **`getLogger().error(...)`** with **`phase: "error"`**, **`statusCode: 500`**, optional **`durationMs`**, and full **`err`** (stack in logs in all envs).
-3. Client gets **500**; **production** body uses a **generic** error string; **non-production** may expose the message.
-4. Response completes → lifecycle logs **`phase: complete`** with **`statusCode: 500`** at **`info`** (access line only—no duplicate stack there).
+**`errorHandler`** final branch: HTTP **500**, one structured **error** log with full **`err`** (see [logging.md](./logging.md)). Lifecycle still logs **`complete`** with status **500** at **`info`** (access line only—no stack there).
 
-So: **one** detailed error log from **`errorHandler`**; **one** access completion line without embedding `err`.
+### Headers already sent
 
-### C) **`res.headersSent`**
-
-If the handler already wrote to the response, **`errorHandler`** returns without sending or logging again—avoid corrupting the client and double logs.
+If **`res.headersSent`**, **`errorHandler`** does not send again or double-log.
 
 ---
 
-## Duration tracking
+## Duration
 
-- **`req.requestStartedAtMs`** is set **once**, at the very beginning of **`bindRequestContext`**, before **`httpLogger`** and **`requestLifecycleLogger`**.
-- **Complete** and **unhandled error** logs compute **`Date.now() - requestStartedAtMs`** so duration covers the whole server-side window from correlation middleware entry, not only the lifecycle middleware’s own execution.
+- **`req.requestStartedAtMs`** is set at the start of **`bindRequestContext`**, before logging middleware.
+- **`durationMs`** on **complete** (and on **unhandled** error logs when present) uses wall time from that timestamp.
 
-If `requestStartedAtMs` were ever missing (mis-ordered tests), the lifecycle logger falls back to **`durationMs: 0`**; the error handler omits **`durationMs`** when unknown.
+If the timestamp were missing (e.g. tests without **`bindRequestContext`**), lifecycle uses **`durationMs: 0`**; the error handler may omit **`durationMs`**.
 
 ---
 
-## ASCII overview (compact)
+## Compact pipeline
 
 ```
   HTTP Request
        │
        v
- [bindRequestContext]-----> requestStartedAtMs, req.id, ALS
+ [bindRequestContext]
        │
        v
-   [httpLogger]------------> idempotent req.id (pino-http)
+   [httpLogger]
        │
        v
- [requestLifecycleLogger]--> log START; arm finish/close
+ [requestLifecycleLogger] --> START
        │
        v
- [parsers / limiter / routes / validateRequest / controller]
+ [limiter / parsers / routes / validateRequest / handler]
        │
-       +-----> (error?) -----> [errorHandler] -----> response
-       │
-       v
-   response end
+       +-----> error? --> [errorHandler] --> response
        │
        v
- [lifecycle COMPLETE log]--> statusCode, durationMs
+   response end --> COMPLETE (access log)
 ```
 
 ---
 
-## Related reading
+## See also
 
-- [logging.md](./logging.md) — pino-http vs lifecycle vs error handler
-- [validation.md](./validation.md) — Zod middleware and readers
-- [async-context.md](./async-context.md) — ALS usage and caveats
+- [logging.md](./logging.md)
+- [validation.md](./validation.md)
+- [async-context.md](./async-context.md)
+- [architecture.md](./architecture.md)
