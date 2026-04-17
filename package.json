@@ -1,0 +1,65 @@
+{
+  "name": "e-commerce-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "E-commerce backend API (Node.js, TypeScript, Express, MongoDB)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run lint && npm run test:ci && npm run build",
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "db:migrate": "migrate-mongo up",
+    "db:migrate:down": "migrate-mongo down",
+    "db:migrate:status": "migrate-mongo status",
+    "db:migrate:create": "migrate-mongo create",
+    "db:seed": "tsx src/database/seed.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.17",
+    "@types/supertest": "^7.2.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "migrate-mongo": "^14.0.7",
+    "prettier": "^3.6.2",
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.58.2",
+    "vitest": "^4.1.4"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.1.0",
+    "mongoose": "^9.4.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "zod": "^4.3.6"
+  }
+}
