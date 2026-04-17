@@ -1,5 +1,5 @@
 import { createApp } from "./app.js";
-import { logger } from "./common/logger.js";
+import { getLogger } from "./common/logger.js";
 import { connectMongo, disconnectMongo } from "./config/database.js";
 import { env } from "./config/env.js";
 import type { Server } from "node:http";
@@ -63,11 +63,11 @@ async function bootstrap(): Promise<void> {
    * Therefore, `env.mongodbUri` is considered safe to use here.
    */
   await connectMongo(env.mongodbUri);
-  logger.info("mongodb_connected");
+  getLogger().info("mongodb_connected");
 
   const app = createApp();
   const server: Server = app.listen(env.port, () => {
-    logger.info({ port: env.port }, "server_listening");
+    getLogger().info({ port: env.port }, "server_listening");
   });
 
   const openSockets = trackOpenSockets(server);
@@ -87,10 +87,10 @@ async function bootstrap(): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
 
-    logger.info({ signal }, "shutdown_started");
+    getLogger().info({ signal }, "shutdown_started");
 
     const forceTimer = setTimeout(() => {
-      logger.error({ signal }, "shutdown_forced_timeout");
+      getLogger().error({ signal }, "shutdown_forced_timeout");
 
       /**
        * At this point graceful shutdown is considered failed.
@@ -119,14 +119,14 @@ async function bootstrap(): Promise<void> {
            * This avoids new queries being initiated during shutdown.
            */
           await disconnectMongo();
-          logger.info("mongodb_disconnected");
+          getLogger().info("mongodb_disconnected");
         } catch (err: unknown) {
           mongoDisconnectFailed = true;
-          logger.error({ err }, "mongodb_disconnect_error");
+          getLogger().error({ err }, "mongodb_disconnect_error");
         }
 
         if (closeErr) {
-          logger.error({ err: closeErr }, "server_close_error");
+          getLogger().error({ err: closeErr }, "server_close_error");
         }
 
         /**
@@ -148,7 +148,7 @@ async function bootstrap(): Promise<void> {
          */
         clearTimeout(forceTimer);
 
-        logger.info({ exitCode }, "shutdown_complete");
+        getLogger().info({ exitCode }, "shutdown_complete");
         process.exit(exitCode);
       })();
     });
@@ -174,7 +174,7 @@ async function bootstrap(): Promise<void> {
    * Recovery is intentionally not attempted because root cause is undefined.
    */
   process.on("unhandledRejection", (reason) => {
-    logger.error({ err: reason }, "unhandled_rejection");
+    getLogger().error({ err: reason }, "unhandled_rejection");
     process.exit(1);
   });
 
@@ -185,7 +185,7 @@ async function bootstrap(): Promise<void> {
    * Therefore, the process is terminated immediately.
    */
   process.on("uncaughtException", (err, origin) => {
-    logger.fatal({ err, origin }, "uncaught_exception");
+    getLogger().fatal({ err, origin }, "uncaught_exception");
     process.exit(1);
   });
 }
@@ -195,6 +195,6 @@ async function bootstrap(): Promise<void> {
  * In this case, immediate termination is required.
  */
 void bootstrap().catch((err: unknown) => {
-  logger.fatal({ err }, "bootstrap_failed");
+  getLogger().fatal({ err }, "bootstrap_failed");
   process.exit(1);
 });

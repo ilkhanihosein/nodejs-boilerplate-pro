@@ -1,11 +1,12 @@
 import type { RequestHandler } from "express";
+import type { z } from "zod";
 import { requireValidatedBody } from "../../common/middlewares/validate-request.js";
 import { loginUser, logoutSession, refreshSessionTokens, registerUser } from "./auth.service.js";
-import type { LoginBody, RefreshBody, RegisterBody } from "./auth.schemas.js";
+import { loginBodySchema, refreshBodySchema, registerBodySchema } from "./auth.schemas.js";
 
 export const registerHandler: RequestHandler = async (req, res, next) => {
   try {
-    const body = requireValidatedBody(req) as RegisterBody;
+    const body = requireValidatedBody<z.infer<typeof registerBodySchema>>(req);
     const result = await registerUser(body);
     res.status(201).json(result);
   } catch (e) {
@@ -15,7 +16,7 @@ export const registerHandler: RequestHandler = async (req, res, next) => {
 
 export const loginHandler: RequestHandler = async (req, res, next) => {
   try {
-    const body = requireValidatedBody(req) as LoginBody;
+    const body = requireValidatedBody<z.infer<typeof loginBodySchema>>(req);
     const result = await loginUser(body);
     res.json(result);
   } catch (e) {
@@ -25,7 +26,7 @@ export const loginHandler: RequestHandler = async (req, res, next) => {
 
 export const refreshHandler: RequestHandler = async (req, res, next) => {
   try {
-    const body = requireValidatedBody(req) as RefreshBody;
+    const body = requireValidatedBody<z.infer<typeof refreshBodySchema>>(req);
     const result = await refreshSessionTokens(body);
     res.json(result);
   } catch (e) {
@@ -35,7 +36,7 @@ export const refreshHandler: RequestHandler = async (req, res, next) => {
 
 export const logoutHandler: RequestHandler = async (req, res, next) => {
   try {
-    const body = requireValidatedBody(req) as RefreshBody;
+    const body = requireValidatedBody<z.infer<typeof refreshBodySchema>>(req);
     await logoutSession(body);
     res.json({ ok: true });
   } catch (e) {

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 
 import { AppError } from "../../common/errors/app-error.js";
+import { getLogger } from "../../common/logger.js";
 import { env } from "../../config/env.js";
 import { UserModel } from "../users/user.model.js";
 import { RefreshTokenSessionModel } from "./refresh-token.model.js";
@@ -172,6 +173,7 @@ export async function registerUser(input: {
     role: userDoc.role,
   };
 
+  getLogger().info({ event: "user_registered", userId: user.id }, "user_registered");
   return issueSession(user);
 }
 
@@ -200,6 +202,7 @@ export async function loginUser(input: {
     role: userDoc.role,
   };
 
+  getLogger().debug({ event: "user_login" }, "user_login_success");
   return issueSession(user);
 }
 

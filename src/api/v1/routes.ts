@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
-import { validateRequest } from "../../common/middlewares/validate-request.js";
+import {
+  requireValidatedQuery,
+  validateRequest,
+} from "../../common/middlewares/validate-request.js";
 import { env } from "../../config/env.js";
 import { authRouter } from "../../modules/auth/auth.routes.js";
 import { usersRouter } from "../../modules/users/users.routes.js";
@@ -20,12 +23,7 @@ apiV1Router.get("/", (_req, res) => {
 });
 
 apiV1Router.get("/hello", validateRequest({ query: helloQuerySchema }), (req, res) => {
-  const parsed = req.validated?.query;
-  if (parsed === undefined) {
-    res.status(500).json({ error: "Missing validated query", code: "internal_error" });
-    return;
-  }
-  const { name } = parsed as z.infer<typeof helloQuerySchema>;
+  const { name } = requireValidatedQuery<z.infer<typeof helloQuerySchema>>(req);
   res.json({ message: `Hello, ${name}` });
 });
 

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { logger } from "../common/logger.js";
+import { getLogger } from "../common/logger.js";
 import { connectMongo, disconnectMongo } from "../config/database.js";
 import { env } from "../config/env.js";
 
@@ -39,11 +39,11 @@ async function seedCategories(): Promise<void> {
 async function main(): Promise<void> {
   await connectMongo(env.mongodbUri);
   await seedCategories();
-  logger.info("seed_completed_categories");
+  getLogger().info("seed_completed_categories");
   await disconnectMongo();
 }
 
 void main().catch((err: unknown) => {
-  logger.fatal({ err }, "seed_failed");
+  getLogger().fatal({ err }, "seed_failed");
   process.exit(1);
 });

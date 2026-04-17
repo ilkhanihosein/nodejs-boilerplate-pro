@@ -1,12 +1,7 @@
-import "dotenv/config";
+import { env } from "./src/config/env.js";
 
-const uri = process.env.MONGODB_URI?.trim();
-if (!uri) {
-  throw new Error("MONGODB_URI is required for migrate-mongo");
-}
-
-function databaseNameFromUri(u) {
-  const noQuery = u.split("?")[0] ?? u;
+function databaseNameFromUri(uri: string): string {
+  const noQuery = uri.split("?")[0] ?? uri;
   const idx = noQuery.lastIndexOf("/");
   if (idx === -1 || idx === noQuery.length - 1) {
     throw new Error(
@@ -19,6 +14,8 @@ function databaseNameFromUri(u) {
   }
   return name;
 }
+
+const uri = env.mongodbUri;
 
 const config = {
   mongodb: {

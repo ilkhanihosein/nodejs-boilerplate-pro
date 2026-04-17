@@ -1,38 +1,48 @@
-import { randomUUID } from "node:crypto";
-import type { Request, Response } from "express";
-import type { LevelWithSilent } from "pino";
+import type { Request, RequestHandler, Response } from "express";
 import { pinoHttp } from "pino-http";
-import { logger } from "../logger.js";
+import { getLogger, logger } from "../logger.js";
+import { httpRequestCompleteFields, httpRequestLogBase } from "../logging/http-request-log.js";
+import { ensureRequestId } from "./request-id.js";
 
-function readIncomingRequestId(req: Request): string | undefined {
-  const raw = req.headers["x-request-id"];
-  return typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : undefined;
-}
-
+/**
+ * `pino-http` for `genReqId` / `req.id` only — no auto response logging (avoids duplicate lines
+ * with `errorHandler`). Use `requestLifecycleLogger` for start/complete access lines.
+ */
 export const httpLogger = pinoHttp({
   logger,
-  autoLogging: true,
+  autoLogging: false,
+  quietReqLogger: true,
+  quietResLogger: true,
   genReqId(req: Request, res: Response) {
-    const id = readIncomingRequestId(req) ?? randomUUID();
-    req.id = id;
-    res.setHeader("X-Request-Id", id);
-    return id;
-  },
-  customLogLevel(_req: Request, res: Response, err?: Error): LevelWithSilent {
-    if (res.statusCode >= 500 || err) {
-      return "error";
-    }
-    if (res.statusCode >= 400) {
-      return "warn";
-    }
-    return "info";
-  },
-  customSuccessMessage(req: Request, res: Response) {
-    void res;
-    return `${req.method} ${req.url} completed`;
-  },
-  customErrorMessage(req: Request, res: Response, err: Error) {
-    void res;
-    return `${req.method} ${req.url} failed: ${err.message}`;
+    return ensureRequestId(req, res);
   },
 });
+
+/** Structured request start + complete (no error payloads; those go to `errorHandler`). */
+export const requestLifecycleLogger: RequestHandler = (req, res, next) => {
+  const base = httpRequestLogBase(req);
+  getLogger().info({ ...base, phase: "start" }, `${base.method} ${base.path} started`);
+
+  let logged = false;
+  const onComplete = () => {
+    if (logged) {
+      return;
+    }
+    logged = true;
+    res.removeListener("finish", onComplete);
+    res.removeListener("close", onComplete);
+    const started = req.requestStartedAtMs;
+    const durationMs = typeof started === "number" ? Date.now() - started : 0;
+    const fields = httpRequestCompleteFields(req, res, durationMs);
+    const access = getLogger();
+    if (res.statusCode >= 400 && res.statusCode < 500) {
+      access.warn(fields, `${fields.method} ${fields.path} completed`);
+    } else {
+      access.info(fields, `${fields.method} ${fields.path} completed`);
+    }
+  };
+
+  res.on("finish", onComplete);
+  res.on("close", onComplete);
+  next();
+};

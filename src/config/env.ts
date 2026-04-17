@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { z } from "zod";
+import { deepFreeze } from "../common/utils/deep-freeze.js";
 
 const LOG_LEVELS = new Set(["fatal", "error", "warn", "info", "debug", "trace", "silent"]);
 
@@ -10,11 +12,11 @@ function parsePort(value: string | undefined): number {
   return 3000;
 }
 
-function parseLogLevel(value: string | undefined): string {
+function parseLogLevel(value: string | undefined, nodeEnv: string): string {
   if (value && LOG_LEVELS.has(value)) {
     return value;
   }
-  return process.env.NODE_ENV === "production" ? "info" : "debug";
+  return nodeEnv === "production" ? "info" : "debug";
 }
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
@@ -98,27 +100,53 @@ function parseApiV1Prefix(value: string | undefined): string {
   return raw;
 }
 
-const nodeEnv = process.env.NODE_ENV ?? "development";
+const rawEnvSchema = z.object({
+  NODE_ENV: z.string().optional(),
+  PORT: z.string().optional(),
+  LOG_LEVEL: z.string().optional(),
+  RATE_LIMIT_WINDOW_MS: z.string().optional(),
+  RATE_LIMIT_MAX: z.string().optional(),
+  CORS_ORIGIN: z.string().optional(),
+  CORS_CREDENTIALS: z.string().optional(),
+  TRUST_PROXY: z.string().optional(),
+  MONGODB_URI: z.string().trim().min(1, "MONGODB_URI must be set"),
+  REQUEST_BODY_LIMIT: z.string().optional(),
+  API_V1_PREFIX: z.string().optional(),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .trim()
+    .min(1, "JWT_ACCESS_SECRET must be set (e.g. in .env); no default is applied"),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .trim()
+    .min(1, "JWT_REFRESH_SECRET must be set (e.g. in .env); no default is applied"),
+  JWT_ACCESS_TTL: z.string().optional(),
+  JWT_REFRESH_TTL: z.string().optional(),
+});
 
-const mongodbUriRaw = process.env.MONGODB_URI?.trim();
-if (!mongodbUriRaw || mongodbUriRaw.length === 0) {
-  throw new Error("MONGODB_URI must be set");
-}
+const envSchema = rawEnvSchema.transform((raw) => {
+  const nodeEnv = raw.NODE_ENV ?? "development";
+  const apiV1Prefix = parseApiV1Prefix(raw.API_V1_PREFIX);
+  return {
+    nodeEnv,
+    port: parsePort(raw.PORT),
+    logLevel: parseLogLevel(raw.LOG_LEVEL, nodeEnv),
+    rateLimitWindowMs: parsePositiveInt(raw.RATE_LIMIT_WINDOW_MS, 60_000),
+    rateLimitMax: parsePositiveInt(raw.RATE_LIMIT_MAX, 300),
+    corsOrigin: parseCorsOrigin(raw.CORS_ORIGIN, nodeEnv),
+    corsCredentials: parseBool(raw.CORS_CREDENTIALS, false),
+    trustProxy: parseTrustProxy(raw.TRUST_PROXY),
+    mongodbUri: raw.MONGODB_URI,
+    bodyLimit: parseBodyLimit(raw.REQUEST_BODY_LIMIT),
+    apiV1Prefix,
+    jwtAccessSecret: raw.JWT_ACCESS_SECRET,
+    jwtAccessTtl: raw.JWT_ACCESS_TTL?.trim() || "15m",
+    jwtRefreshSecret: raw.JWT_REFRESH_SECRET,
+    jwtRefreshTtl: raw.JWT_REFRESH_TTL?.trim() || "7d",
+  };
+});
 
-export const env = {
-  nodeEnv,
-  port: parsePort(process.env.PORT),
-  logLevel: parseLogLevel(process.env.LOG_LEVEL),
-  rateLimitWindowMs: parsePositiveInt(process.env.RATE_LIMIT_WINDOW_MS, 60_000),
-  rateLimitMax: parsePositiveInt(process.env.RATE_LIMIT_MAX, 300),
-  corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN, nodeEnv),
-  corsCredentials: parseBool(process.env.CORS_CREDENTIALS, false),
-  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
-  mongodbUri: mongodbUriRaw,
-  bodyLimit: parseBodyLimit(process.env.REQUEST_BODY_LIMIT),
-  apiV1Prefix: parseApiV1Prefix(process.env.API_V1_PREFIX),
-  jwtAccessSecret: process.env.JWT_ACCESS_SECRET?.trim() || "dev-access-secret-change-me",
-  jwtAccessTtl: process.env.JWT_ACCESS_TTL?.trim() || "15m",
-  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET?.trim() || "dev-refresh-secret-change-me",
-  jwtRefreshTtl: process.env.JWT_REFRESH_TTL?.trim() || "7d",
-} as const;
+export type Env = z.infer<typeof envSchema>;
+
+/** Validated on import; invalid configuration throws before the process can serve traffic. */
+export const env: Env = deepFreeze(envSchema.parse(process.env));

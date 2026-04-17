@@ -1,5 +1,6 @@
 import pino from "pino";
-import type { LevelWithSilent } from "pino";
+import type { LevelWithSilent, Logger } from "pino";
+import { getRequestId } from "./context/request-context.js";
 import { env } from "../config/env.js";
 
 const validLevels = ["fatal", "error", "warn", "info", "debug", "trace", "silent"] as const;
@@ -14,7 +15,7 @@ const level: LevelWithSilent = isValidLevel(env.logLevel)
     ? "info"
     : "debug";
 
-export const logger = pino({
+const rootLogger = pino({
   level,
   base: {
     pid: process.pid,
@@ -31,3 +32,15 @@ export const logger = pino({
     remove: true,
   },
 });
+
+/** Root pino instance passed to `pino-http`. Prefer `getLogger()` for application code. */
+export const logger = rootLogger;
+
+/**
+ * Application logger: after `bindRequestContext`, binds `requestId` from AsyncLocalStorage
+ * so it matches access and error logs.
+ */
+export function getLogger(): Logger {
+  const requestId = getRequestId();
+  return requestId !== undefined ? rootLogger.child({ requestId }) : rootLogger;
+}

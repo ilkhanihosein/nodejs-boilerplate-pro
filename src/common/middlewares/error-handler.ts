@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import { ZodError } from "zod";
 import { env } from "../../config/env.js";
 import { AppError } from "../errors/app-error.js";
-import { logger } from "../logger.js";
+import { httpRequestLogBase } from "../logging/http-request-log.js";
+import { getLogger } from "../logger.js";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   void next;
@@ -48,7 +49,19 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     return;
   }
 
-  logger.error({ err, reqId: req.id }, "unhandled_error");
+  const started = req.requestStartedAtMs;
+  const durationMs = typeof started === "number" ? Date.now() - started : undefined;
+  getLogger().error(
+    {
+      ...httpRequestLogBase(req),
+      phase: "error",
+      statusCode: 500,
+      ...(durationMs !== undefined ? { durationMs } : {}),
+      err,
+    },
+    "unhandled_error",
+  );
+
   const message =
     env.nodeEnv === "production"
       ? "Internal Server Error"

@@ -26,36 +26,55 @@ export function validateRequest(parts: ValidateRequestParts): RequestHandler {
         req.validated.params = parts.params.parse(req.params);
       }
       next();
-    } catch (err) {
-      next(err);
+    } catch (e) {
+      next(e);
     }
   };
 }
 
-/**
- * Read `req.validated.*` after `validateRequest` ran on the same route.
- * Values stay `unknown` until callers narrow with `z.infer<typeof schema>` (or similar).
- */
-export function requireValidatedBody(req: Request): unknown {
-  const body = req.validated?.body;
-  if (body === undefined) {
-    throw new Error("Missing validated body");
+function readValidatedBody(req: Request): unknown {
+  const validated = req.validated;
+  if (validated === undefined || validated.body === undefined) {
+    throw new Error(
+      "Missing validated body (add validateRequest with a body schema before this handler)",
+    );
   }
-  return body;
+  return validated.body;
 }
 
-export function requireValidatedQuery(req: Request): unknown {
-  const query = req.validated?.query;
-  if (query === undefined) {
-    throw new Error("Missing validated query");
+function readValidatedQuery(req: Request): unknown {
+  const validated = req.validated;
+  if (validated === undefined || validated.query === undefined) {
+    throw new Error(
+      "Missing validated query (add validateRequest with a query schema before this handler)",
+    );
   }
-  return query;
+  return validated.query;
 }
 
-export function requireValidatedParams(req: Request): unknown {
-  const params = req.validated?.params;
-  if (params === undefined) {
-    throw new Error("Missing validated params");
+function readValidatedParams(req: Request): unknown {
+  const validated = req.validated;
+  if (validated === undefined || validated.params === undefined) {
+    throw new Error(
+      "Missing validated params (add validateRequest with a params schema before this handler)",
+    );
   }
-  return params;
+  return validated.params;
 }
+
+/* eslint-disable @typescript-eslint/no-unnecessary-type-parameters -- `T` is supplied at call sites as `z.infer<typeof schema>` */
+/** Read `req.validated.body` after `validateRequest({ body: … })`. */
+export function requireValidatedBody<T>(req: Request): T {
+  return readValidatedBody(req) as T;
+}
+
+/** Read `req.validated.query` after `validateRequest({ query: … })`. */
+export function requireValidatedQuery<T>(req: Request): T {
+  return readValidatedQuery(req) as T;
+}
+
+/** Read `req.validated.params` after `validateRequest({ params: … })`. */
+export function requireValidatedParams<T>(req: Request): T {
+  return readValidatedParams(req) as T;
+}
+/* eslint-enable @typescript-eslint/no-unnecessary-type-parameters */
