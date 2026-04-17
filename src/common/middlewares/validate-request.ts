@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
 import type { z } from "zod";
 
 export type ValidateRequestParts = {
@@ -30,4 +30,32 @@ export function validateRequest(parts: ValidateRequestParts): RequestHandler {
       next(err);
     }
   };
+}
+
+/**
+ * Read `req.validated.*` after `validateRequest` ran on the same route.
+ * Values stay `unknown` until callers narrow with `z.infer<typeof schema>` (or similar).
+ */
+export function requireValidatedBody(req: Request): unknown {
+  const body = req.validated?.body;
+  if (body === undefined) {
+    throw new Error("Missing validated body");
+  }
+  return body;
+}
+
+export function requireValidatedQuery(req: Request): unknown {
+  const query = req.validated?.query;
+  if (query === undefined) {
+    throw new Error("Missing validated query");
+  }
+  return query;
+}
+
+export function requireValidatedParams(req: Request): unknown {
+  const params = req.validated?.params;
+  if (params === undefined) {
+    throw new Error("Missing validated params");
+  }
+  return params;
 }

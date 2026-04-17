@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { validateRequest } from "../../common/middlewares/validate-request.js";
 import { env } from "../../config/env.js";
+import { authRouter } from "../../modules/auth/auth.routes.js";
+import { usersRouter } from "../../modules/users/users.routes.js";
 
 const helloQuerySchema = z.object({
   name: z.string().trim().min(1).max(64),
@@ -26,3 +28,6 @@ apiV1Router.get("/hello", validateRequest({ query: helloQuerySchema }), (req, re
   const { name } = parsed as z.infer<typeof helloQuerySchema>;
   res.json({ message: `Hello, ${name}` });
 });
+
+apiV1Router.use("/auth", authRouter);
+apiV1Router.use("/users", usersRouter);

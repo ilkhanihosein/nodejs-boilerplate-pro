@@ -117,4 +117,8 @@ export const env = {
   mongodbUri: mongodbUriRaw,
   bodyLimit: parseBodyLimit(process.env.REQUEST_BODY_LIMIT),
   apiV1Prefix: parseApiV1Prefix(process.env.API_V1_PREFIX),
+  jwtAccessSecret: process.env.JWT_ACCESS_SECRET?.trim() || "dev-access-secret-change-me",
+  jwtAccessTtl: process.env.JWT_ACCESS_TTL?.trim() || "15m",
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET?.trim() || "dev-refresh-secret-change-me",
+  jwtRefreshTtl: process.env.JWT_REFRESH_TTL?.trim() || "7d",
 } as const;

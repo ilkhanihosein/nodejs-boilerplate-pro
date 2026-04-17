@@ -9,6 +9,11 @@ declare global {
         query?: unknown;
         params?: unknown;
       };
+      authUser?: {
+        id: string;
+        email: string;
+        role: "customer" | "admin";
+      };
     }
   }
 }
