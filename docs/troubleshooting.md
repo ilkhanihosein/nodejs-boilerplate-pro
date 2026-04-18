@@ -18,7 +18,7 @@ Short reference for common issues when **running** or **adapting** this boilerpl
 
 **Symptom:** `server.ts` fails during `connectMongo`, or `/health/ready` stays not ready.
 
-**Fix:** Ensure **`MONGODB_URI`** points at a reachable host (local `mongod`, **Docker Compose** `mongo` service name, or Atlas). For Compose, use the service hostname from the same Docker network, not `127.0.0.1` from inside the API container unless you use host networking.
+**Fix:** Ensure **`MONGODB_URI`** points at a reachable host (local `mongod`, **Docker Compose** `mongo` service name, or Atlas). For Compose, use the service hostname from the same Docker network, not `127.0.0.1` from inside the API container unless you use host networking. See [docker-and-local-development.md](./docker-and-local-development.md).
 
 ---
 
@@ -34,7 +34,7 @@ Short reference for common issues when **running** or **adapting** this boilerpl
 
 **Symptom:** migrate-mongo or **`npm run db:seed`** errors.
 
-**Fix:** **`MONGODB_URI`** must be valid and the database reachable. migrate-mongo config loads **`env`** via **tsx**—same rules as the app. Run migrations **after** Mongo is up.
+**Fix:** **`MONGODB_URI`** must be valid and the database reachable. migrate-mongo config loads **`env`** via **tsx**—same rules as the app. Run migrations **after** Mongo is up. See [database-migrations-and-seeding.md](./database-migrations-and-seeding.md) for scripts, URI shape, and CI notes.
 
 ---
 

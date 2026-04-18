@@ -54,16 +54,13 @@ Nothing under `src/modules/` is required for the **framework** of logging, valid
 - **`/health`** — liveness (process up).
 - **`/health/ready`** — readiness (e.g. database connected); use for orchestrator probes.
 
-Mount paths for versioned APIs come from **`env.apiV1Prefix`**.
+Details and Compose notes: [docker-and-local-development.md](./docker-and-local-development.md). Mount paths for versioned APIs come from **`env.apiV1Prefix`**.
 
 ---
 
 ## Database tooling
 
-- **Migrations:** **migrate-mongo**; config **`migrate-mongo-config.ts`** loads **`env`** via **tsx**. Changelog collection name is defined in that config.
-- **Seed:** optional script under **`src/database/`**; wire your own collections and idempotent upserts.
-
-Run migrations when the database is reachable (local **mongod**, compose service, or managed URI).
+Migrations, npm scripts, and seeding are documented in **[database-migrations-and-seeding.md](./database-migrations-and-seeding.md)** (summary: **migrate-mongo** + optional **`src/database/seed.ts`**). Run migrations when the database is reachable (local **mongod**, compose service, or managed URI).
 
 ---
 
@@ -76,12 +73,18 @@ Run migrations when the database is reachable (local **mongod**, compose service
 
 ## Related documents
 
-| Topic                         | Document                                       |
-| ----------------------------- | ---------------------------------------------- |
-| Env keys and defaults         | [env-configuration.md](./env-configuration.md) |
-| Running and writing tests     | [testing.md](./testing.md)                     |
-| Common failures               | [troubleshooting.md](./troubleshooting.md)     |
-| Request order, middleware     | [request-lifecycle.md](./request-lifecycle.md) |
-| Logging components            | [logging.md](./logging.md)                     |
-| Request body/query validation | [validation.md](./validation.md)               |
-| Correlation id / ALS          | [async-context.md](./async-context.md)         |
+| Topic                         | Document                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| Env keys and defaults         | [env-configuration.md](./env-configuration.md)                               |
+| Running and writing tests     | [testing.md](./testing.md)                                                   |
+| Common failures               | [troubleshooting.md](./troubleshooting.md)                                   |
+| Request order, middleware     | [request-lifecycle.md](./request-lifecycle.md)                               |
+| Logging components            | [logging.md](./logging.md)                                                   |
+| Request body/query validation | [validation.md](./validation.md)                                             |
+| Correlation id / ALS          | [async-context.md](./async-context.md)                                       |
+| Migrations and seed           | [database-migrations-and-seeding.md](./database-migrations-and-seeding.md)   |
+| Docker / local stack          | [docker-and-local-development.md](./docker-and-local-development.md)         |
+| Security defaults             | [security-and-http-hardening.md](./security-and-http-hardening.md)           |
+| Auth and roles                | [authentication-and-authorization.md](./authentication-and-authorization.md) |
+| Error JSON shapes             | [errors-and-json-responses.md](./errors-and-json-responses.md)               |
+| CI and pre-commit             | [ci-and-git-hooks.md](./ci-and-git-hooks.md)                                 |

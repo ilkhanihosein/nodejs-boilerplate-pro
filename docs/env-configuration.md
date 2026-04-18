@@ -55,4 +55,8 @@ When you add or remove configuration:
 ## Related
 
 - [architecture.md](./architecture.md) — where `env` fits in the stack
+- [docker-and-local-development.md](./docker-and-local-development.md) — Compose env and Mongo URI from host vs container
+- [security-and-http-hardening.md](./security-and-http-hardening.md) — how CORS, rate limit, trust proxy, and body limit use `env`
+- [authentication-and-authorization.md](./authentication-and-authorization.md) — JWT secrets and TTLs in practice
+- [errors-and-json-responses.md](./errors-and-json-responses.md) — production vs dev error bodies (driven by `NODE_ENV`)
 - [troubleshooting.md](./troubleshooting.md) — startup failures

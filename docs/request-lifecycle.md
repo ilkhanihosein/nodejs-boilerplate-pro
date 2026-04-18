@@ -10,16 +10,16 @@ Order of execution from **`createApp()`** through the response and optional **`e
 
 After **Helmet** and **CORS**:
 
-| Step | Middleware                            | Responsibility                                                                                                            |
-| ---- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 1    | **`bindRequestContext`**              | **`requestStartedAtMs`**, **`ensureRequestId`** → **`req.id`**, **`X-Request-Id`**, **`runWithContext(requestId)`** (ALS) |
-| 2    | **`httpLogger`** (`pino-http`)        | **`genReqId`** / **`ensureRequestId`** (idempotent); **`autoLogging: false`**                                             |
-| 3    | **`requestLifecycleLogger`**          | Log **`phase: "start"`**; register **`finish`** / **`close`** → one **`phase: "complete"`** line                          |
-| 4    | **`httpRateLimiter`**                 | Rate limiting                                                                                                             |
-| 5    | **`express.json`** / **`urlencoded`** | Body parsing                                                                                                              |
-| —    | Feature routers                       | Optional **`validateRequest`**, auth, controllers                                                                         |
-| —    | **404** handler                       | JSON not found                                                                                                            |
-| last | **`errorHandler`**                    | Map errors to responses; **unhandled** branch logs once (see logging doc)                                                 |
+| Step | Middleware                            | Responsibility                                                                                                                                 |
+| ---- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **`bindRequestContext`**              | **`requestStartedAtMs`**, **`ensureRequestId`** → **`req.id`**, **`X-Request-Id`**, **`runWithContext(requestId)`** (ALS)                      |
+| 2    | **`httpLogger`** (`pino-http`)        | **`genReqId`** / **`ensureRequestId`** (idempotent); **`autoLogging: false`**                                                                  |
+| 3    | **`requestLifecycleLogger`**          | Log **`phase: "start"`**; register **`finish`** / **`close`** → one **`phase: "complete"`** line                                               |
+| 4    | **`httpRateLimiter`**                 | Rate limiting                                                                                                                                  |
+| 5    | **`express.json`** / **`urlencoded`** | Body parsing                                                                                                                                   |
+| —    | Feature routers                       | Optional **`validateRequest`**, auth, controllers                                                                                              |
+| —    | **404** handler                       | JSON not found                                                                                                                                 |
+| last | **`errorHandler`**                    | Map errors to responses (see [errors-and-json-responses.md](./errors-and-json-responses.md)); **unhandled** branch logs once (see logging doc) |
 
 Downstream code that runs inside the same **`runWithContext`** callback sees the same ALS store for the lifetime of that request chain (subject to async caveats in [async-context.md](./async-context.md)).
 

@@ -10,7 +10,7 @@
 
 ## Documentation
 
-All architecture and system behavior are documented under **[`docs/`](./docs)**. Start at **[`docs/README.md`](./docs/README.md)** (index: env, testing, troubleshooting, logging, validation, lifecycle, async context).
+All architecture and system behavior are documented under **[`docs/`](./docs)**. Start at **[`docs/README.md`](./docs/README.md)** (index: architecture, auth, CI/hooks, database migrations/seed, Docker/local dev, env, errors, testing, troubleshooting, security, logging, validation, lifecycle, async context).
 
 ---
 
@@ -96,4 +96,4 @@ Brings up the **API** and **MongoDB**. Point **`MONGODB_URI`** in **`.env`** at 
 
 ## Documentation is the source of truth
 
-Behavior, middleware order, logging, validation, async context, and migrations are described only in **`/docs`**. This README is onboarding and navigation—not a duplicate of those details.
+Behavior, middleware order, logging, validation, async context, migrations, Docker/health, security defaults, auth, error JSON, and CI/hooks are described in **`/docs`**. This README is onboarding and navigation—not a duplicate of those details.
