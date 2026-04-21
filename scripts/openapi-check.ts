@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "../src/config/zod-openapi-init.js";
 import { buildOpenApiV1Document } from "../src/api/v1/openapi.js";
+import { listMountedContractOperations } from "../src/api/v1/list-contract-operations.js";
+import { enforceStrictOpenApiContract } from "../src/common/http/openapi-contract-strict.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const openApiJsonPath = join(root, "generated", "openapi.json");
@@ -51,3 +53,17 @@ if (fresh !== normalizedDisk) {
 }
 
 console.log("openapi:check OK (generated/openapi.json matches registry).");
+
+const doc = buildOpenApiV1Document();
+const contractIssues = enforceStrictOpenApiContract(listMountedContractOperations(), doc);
+if (contractIssues.length > 0) {
+  console.error(
+    "OpenAPI strict contract check failed:\n" +
+      contractIssues.map((line) => `  - ${line}`).join("\n") +
+      "\n\nPolicy: every HTTP route must be declared via HttpEndpointRegistry + define*Endpoint, " +
+      "contributed to buildOpenApiV1Document, and listed in listMountedContractOperations().",
+  );
+  process.exit(1);
+}
+
+console.log("openapi:check OK (strict contract: registry ↔ OpenAPI + JSON schemas).");

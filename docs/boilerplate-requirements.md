@@ -19,7 +19,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 1. API contract and consumer experience
 
-- **OpenAPI 3** — **Partially done:** Swagger UI at **`/docs`**; spec **generated from Zod** in **`src/api/v1/openapi.ts`** via **`@asteasolutions/zod-to-openapi`** (request shapes reuse validation schemas). **CI:** **`npm run openapi:check`** (in **`npm run check`**) fails if **`generated/openapi.json`** drifts from **`buildOpenApiV1Document()`**; regenerate with **`npm run openapi:generate`**. **Still open:** splitting large path lists per module (if registries grow), and tightening any remaining **response** schemas.
+- **OpenAPI 3** — **Done (contract-first CI):** Swagger UI at **`/docs`**; spec **generated from Zod** in **`src/api/v1/openapi.ts`** via **`@asteasolutions/zod-to-openapi`**. **`httpContractRegistries`** in **`src/api/v1/contract-registries.ts`** is the single list of registries that both contribute OpenAPI and define the mounted HTTP contract. **`npm run openapi:check`** (in **`npm run check`**) fails if **`generated/openapi.json`** drifts from **`buildOpenApiV1Document()`** _or_ if strict enforcement fails: every listed registry operation must appear in OpenAPI with no extra paths, **POST/PUT/PATCH** must declare **`application/json`** **`requestBody`**, and every response must declare **`application/json`** **`schema`**. Regenerate with **`npm run openapi:generate`**. **Still open:** optional codegen-only client types, splitting very large path lists per module.
 - **API version** — **Done:** **`X-API-Version`** on all responses under the versioned API router; **`apiVersion`** on **`errorHandler`** JSON, **`/health`**, **`/health/ready`**, sample **`GET`** handlers under v1, and **404** under **`API_V1_PREFIX`**. Configure with **`API_VERSION`** (default **`1`**). Optional **`GIT_SHA`** on health for deploys.
 - **Pagination / filtering / sorting** — **Done (sample list):** **`GET /api/v1/users`** uses **`offsetPaginationQuerySchema`** + **`sortQuerySchema`** and returns **`page`**, **`limit`**, **`total`**, **`items`** (see **`docs/http-list-endpoints.md`**). **Still open:** adopt the same pattern on other collection routes as you add them; **cursor** pagination remains a helper-only sample until a route uses it.
 
@@ -29,7 +29,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 3. Security and multi-instance production
 
-- **In-memory rate limiting** — **Done (optional Redis):** set **`RATE_LIMIT_REDIS_URL`** to **`redis://`** or **`rediss://`** for **`rate-limit-redis`** + **`node-redis`** in **`server.ts`**; Compose includes a **`redis`** service (uncomment **`RATE_LIMIT_REDIS_URL`** on **`api`** when needed). Single-instance default remains in-memory.
+- **In-memory rate limiting** — **Done (Redis required in production):** **`RATE_LIMIT_REDIS_URL`** is **required** when **`NODE_ENV=production`** (fail-fast in **`src/config/env.ts`**). In development it remains optional (**`rate-limit-redis`** + **`node-redis`** in **`server.ts`** when set). **`docker-compose.yml`** wires **`RATE_LIMIT_REDIS_URL`** for the **`api`** service with **`NODE_ENV=production`**.
 - **Dependabot / Renovate** — **Done (Dependabot):** **`.github/dependabot.yml`** weekly **npm** updates.
 - **`npm audit` in CI** — **Done:** workflow runs **`npm audit --audit-level=high`** (fails on **high** and **critical** only); tighten policy in **`docs/ci-and-git-hooks.md`** if needed.
 - If **cookies / sessions** are added later, document **CSRF** and the threat model; today JWT Bearer is the pattern and is common for SPAs.
@@ -95,7 +95,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 | R3.2 | Consistent JSON error shape (code, message, optional `details`) | Must   | Predictable validation and 404 behavior                | Done                                                                                                         |
 | R3.3 | Edge validation (body/query/params)                             | Must   | One pattern across the codebase                        | Done                                                                                                         |
 | R3.4 | Documented pagination/filter contract (pattern or helper)       | Should | Docs or sample code; front-end does not guess          | Done: helpers + **`GET /users`** offset + sort + **`total`**; checklist in **`docs/http-list-endpoints.md`** |
-| R3.5 | OpenAPI (or equivalent) for v1                                  | Should | Generated or hand-maintained; CI can validate artifact | Done: `/docs` + Zod registries + **`openapi:check`** in CI; optional response tightening per route           |
+| R3.5 | OpenAPI (or equivalent) for v1                                  | Should | Generated or hand-maintained; CI can validate artifact | Done: `/docs` + Zod registries + **`openapi:check`** (drift + strict contract + JSON schemas) in CI          |
 | R3.6 | Body size limits and content handling                           | Must   | Protection against huge payloads                       | Done                                                                                                         |
 
 ---

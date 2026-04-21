@@ -10,7 +10,15 @@ Short reference for common issues when **running** or **adapting** this boilerpl
 
 **Cause:** **`src/config/env.ts`** runs **`parse(process.env)`** on import. A **required** variable is missing or invalid (see [env-configuration.md](./env-configuration.md)).
 
-**Fix:** Fill **`.env`** from **`.env.example`**, especially **`MONGODB_URI`**, **`JWT_ACCESS_SECRET`**, and **`JWT_REFRESH_SECRET`**. Fix typos in **`API_V1_PREFIX`** (must start with `/`, no `..`).
+**Fix:** Fill **`.env`** from **`.env.example`**, especially **`MONGODB_URI`**, **`JWT_ACCESS_SECRET`**, and **`JWT_REFRESH_SECRET`**. Fix typos in **`API_V1_PREFIX`** (must start with `/`, no `..`). If **`NODE_ENV=production`**, set **`RATE_LIMIT_REDIS_URL`** to a valid **`redis://`** or **`rediss://`** URL (required for multi-replica-safe limits).
+
+---
+
+## `openapi:check` fails after adding a route
+
+**Symptom:** CI or **`npm run openapi:check`** prints strict contract errors (missing path, extra path, or missing JSON **`requestBody`** / response **`schema`**).
+
+**Fix:** Declare the route with **`definePublicEndpoint`** / **`defineProtectedEndpoint`**, add its registry to **`httpContractRegistries`** if it is new, **`mount`** it on the Express router, run **`npm run openapi:generate`**, and commit **`generated/openapi.json`**. See [openapi.md](./openapi.md).
 
 ---
 

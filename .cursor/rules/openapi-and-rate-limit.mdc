@@ -1,0 +1,16 @@
+---
+description: Contract-first HTTP API and production rate limiting
+alwaysApply: true
+---
+
+# OpenAPI and rate limits
+
+## HTTP API contract
+
+- A route is not valid unless it is implemented through **`HttpEndpointRegistry`** + **`definePublicEndpoint`** / **`defineProtectedEndpoint`**, included in **`httpContractRegistries`** (`src/api/v1/contract-registries.ts`), mounted on Express, and contributed to **`buildOpenApiV1Document`**.
+- **CI** (`npm run openapi:check`): generated `openapi.json` must match the document builder, and **`enforceStrictOpenApiContract`** must pass (registry operations ↔ OpenAPI paths, JSON `requestBody` for POST/PUT/PATCH, JSON response schemas).
+
+## Rate limiting
+
+- **Development:** omitting **`RATE_LIMIT_REDIS_URL`** uses in-memory limits (single process).
+- **Production** (`NODE_ENV=production`): **`RATE_LIMIT_REDIS_URL`** is **required**; startup fails without it so multi-replica deploys never silently use per-process counters.

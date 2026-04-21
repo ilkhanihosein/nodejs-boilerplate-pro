@@ -1,10 +1,7 @@
 import { OpenApiGeneratorV3, OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { OpenAPIObject } from "openapi3-ts/oas30";
 import { env } from "../../config/env.js";
-import { authEndpointRegistry } from "../../modules/auth/auth.endpoints.js";
-import { healthEndpointRegistry } from "../../modules/health/health.endpoints.js";
-import { usersEndpointRegistry } from "../../modules/users/users.endpoints.js";
-import { v1PublicEndpointRegistry } from "./v1-public.endpoints.js";
+import { httpContractRegistries } from "./contract-registries.js";
 
 /** OpenAPI 3 document: every path comes from `HttpEndpointRegistry` + `definePublicEndpoint` / `defineProtectedEndpoint` (no hand-written paths). */
 export function buildOpenApiV1Document(): OpenAPIObject {
@@ -16,10 +13,9 @@ export function buildOpenApiV1Document(): OpenAPIObject {
     bearerFormat: "JWT",
   });
 
-  healthEndpointRegistry.contributeOpenApi(registry);
-  v1PublicEndpointRegistry.contributeOpenApi(registry);
-  authEndpointRegistry.contributeOpenApi(registry);
-  usersEndpointRegistry.contributeOpenApi(registry);
+  for (const r of httpContractRegistries) {
+    r.contributeOpenApi(registry);
+  }
 
   const generator = new OpenApiGeneratorV3(registry.definitions);
 

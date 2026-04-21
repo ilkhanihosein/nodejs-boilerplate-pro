@@ -126,7 +126,7 @@ const rawEnvSchema = z.object({
   LOG_LEVEL: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.string().optional(),
   RATE_LIMIT_MAX: z.string().optional(),
-  /** When set, `express-rate-limit` uses Redis (`rate-limit-redis`) so limits are shared across processes/replicas. */
+  /** Required when NODE_ENV=production. When set in any env, `express-rate-limit` uses Redis (`rate-limit-redis`). */
   RATE_LIMIT_REDIS_URL: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),
   CORS_CREDENTIALS: z.string().optional(),
@@ -210,6 +210,15 @@ function envTransform(raw: z.infer<typeof rawEnvSchema>) {
 }
 
 const envSchema = rawEnvSchema.transform(envTransform).superRefine((out, ctx) => {
+  if (out.nodeEnv === "production" && out.rateLimitRedisUrl === undefined) {
+    ctx.addIssue({
+      code: "custom",
+      message:
+        "RATE_LIMIT_REDIS_URL is required when NODE_ENV=production so HTTP rate limits are shared across replicas (in-memory limits are not production-safe)",
+      path: ["RATE_LIMIT_REDIS_URL"],
+    });
+  }
+
   if (out.rateLimitRedisUrl !== undefined) {
     try {
       const parsed = new URL(out.rateLimitRedisUrl);

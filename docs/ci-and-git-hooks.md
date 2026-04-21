@@ -12,7 +12,7 @@ Workflow: **`.github/workflows/ci.yml`**
 | ---------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Push to **`main`** / **`master`**, or any **pull_request** | **check** | Checkout → Node from **`.nvmrc`** (`actions/setup-node` **`node-version-file`**) + npm cache → **`npm ci`** → **`npm audit --audit-level=high`** → **`npm run check`** |
 
-**`npm run check`** runs, in order: **Prettier** (`format:check`), **ESLint**, **Vitest** with **coverage** (`test:ci` — thresholds in **`vitest.config.ts`**), **frontend** `tsc`, **`npm run build`**, **`openapi:check`**. Failing any step fails the job.
+**`npm run check`** runs, in order: **Prettier** (`format:check`), **ESLint**, **Vitest** with **coverage** (`test:ci` — thresholds in **`vitest.config.ts`**), **frontend** `tsc`, **`npm run build`**, **`openapi:check`** (artifact drift **+** strict registry ↔ OpenAPI contract). Failing any step fails the job.
 
 **`npm audit`:** the workflow fails on **high** and **critical** advisories only (see npm **`--audit-level`**). Tighten to **`moderate`** or add **`--production`** if your team policy requires it.
 

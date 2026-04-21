@@ -12,9 +12,10 @@ The document at **`/docs`** (when **`API_DOCS_ENABLED`**) is built by **`buildOp
 | **`validateRequest`**              | **Only** runtime parse for **request** slices used on that route                                                                                               |
 | **`buildValidatedBagFromRequest`** | Copies **`req.validated`** into the handler (no second parse)                                                                                                  |
 | **`*.service.ts`**                 | Business logic; returns objects typed with **`import type { … }`** from schemas — **no Zod**, no Express (see ESLint)                                          |
-| **`HttpEndpointRegistry`**         | **`add`**, **`mount`**, **`contributeOpenApi`**; protected routes must lead with **`requireAuth`**                                                             |
+| **`HttpEndpointRegistry`**         | **`add`**, **`mount`**, **`contributeOpenApi`**, **`listOperations`**; protected routes must lead with **`requireAuth`**                                       |
+| **`httpContractRegistries`**       | **`src/api/v1/contract-registries.ts`** — single ordered list of registries that both **`contributeOpenApi`** and define the enforced HTTP surface             |
 
-**`openapi.ts`**: components (e.g. **`bearerAuth`**) + **`contributeOpenApi`** on each registry — no hand-written **`registerPath`**.
+**`openapi.ts`**: components (e.g. **`bearerAuth`**) + loops **`httpContractRegistries`** — no hand-written **`registerPath`** outside **`define*Endpoint`**.
 
 **Logout:** public **`POST /auth/logout`**; body **`logoutRefreshTokenBodySchema`** (refresh JWT only). See **`auth.endpoints.ts`**.
 
@@ -29,9 +30,11 @@ The document at **`/docs`** (when **`API_DOCS_ENABLED`**) is built by **`buildOp
 
 ## CI and drift
 
-- **`npm run openapi:check`** — builds the document from **`buildOpenApiV1Document()`**, normalizes JSON (sorted object keys), and compares to **`generated/openapi.json`**. Fails if the committed artifact is missing or out of date.
+- **`npm run openapi:check`** — (1) builds the document from **`buildOpenApiV1Document()`**, normalizes JSON (sorted object keys), and compares to **`generated/openapi.json`**; (2) runs **`enforceStrictOpenApiContract`**: operations from **`listMountedContractOperations()`** (derived from **`httpContractRegistries`**) must match **`paths`** exactly (no undocumented operations, no missing ones); (3) every operation must declare **`application/json`** response **`schema`** for each status, and **POST** / **PUT** / **PATCH** must declare **`requestBody`** **`content['application/json'].schema`**.
 - **`npm run check`** (including **GitHub Actions** on PRs) runs **`openapi:check`** after **`npm run build`**.
 - After registry or schema changes: **`npm run openapi:generate`**, commit **`generated/openapi.json`** (and **`generated/api-types.ts`** if you use the client types).
+
+**Team rule:** no versioned or health HTTP handler is valid unless it lives on a registry in **`httpContractRegistries`**, is mounted from **`*.routes.ts`**, and **`npm run openapi:check`** passes.
 
 ## Related
 

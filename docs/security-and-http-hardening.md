@@ -23,10 +23,10 @@ Configured from **`env.corsOrigin`** and **`env.corsCredentials`**. In **develop
 
 **Store:**
 
-- **Default:** in-memory counters (**one process**). Fine for local dev or a single container.
-- **Multi-replica / several pods:** set **`RATE_LIMIT_REDIS_URL`** to a **`redis://`** or **`rediss://`** URL. **`server.ts`** connects with **`node-redis`**, builds **`rate-limit-redis`**’s **`RedisStore`**, and passes it into **`createApp({ rateLimitStore })`**. Keys use the prefix **`rl:http:`** in Redis. On shutdown the client is closed after the HTTP server stops accepting connections.
+- **Development:** omit **`RATE_LIMIT_REDIS_URL`** to use in-memory counters (**one process**).
+- **Production** (`NODE_ENV=production`): **`RATE_LIMIT_REDIS_URL`** is **required** — **`env`** validation fails at startup if it is missing, so a multi-replica deploy cannot accidentally run with per-process limits. Use **`redis://`** or **`rediss://`**. **`server.ts`** connects with **`node-redis`**, builds **`rate-limit-redis`**’s **`RedisStore`**, and passes it into **`createApp({ rateLimitStore })`**. Keys use the prefix **`rl:http:`** in Redis. On shutdown the client is closed after the HTTP server stops accepting connections.
 
-Compose ships an optional **`redis`** service; uncomment **`RATE_LIMIT_REDIS_URL`** on the **`api`** service in **`docker-compose.yml`** when you want shared limits in Docker.
+**`docker-compose.yml`** sets **`RATE_LIMIT_REDIS_URL`** on the **`api`** service when **`NODE_ENV`** is **`production`**, matching the Compose **`redis`** service.
 
 ---
 

@@ -2,7 +2,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { RequestHandler, Router } from "express";
 import { requireAuth } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/validate-request.js";
-import type { EndpointDefinition, HttpMethod } from "./define-endpoint.js";
+import { joinOpenApiPath, type EndpointDefinition, type HttpMethod } from "./define-endpoint.js";
 
 /**
  * Groups endpoints that share the same OpenAPI path prefix (e.g. `/api/v1` or `/api/v1/users`).
@@ -48,6 +48,15 @@ export class HttpEndpointRegistry {
     for (const ep of this.endpoints) {
       ep.registerOpenApi(registry, base);
     }
+  }
+
+  /** Full OpenAPI path + HTTP method for every mounted endpoint (used by contract CI). */
+  listOperations(): ReadonlyArray<{ method: HttpMethod; path: string }> {
+    const base = this.openApiBasePath.replace(/\/$/, "") || "";
+    return this.endpoints.map((ep) => ({
+      method: ep.method,
+      path: joinOpenApiPath(base, ep.expressPath),
+    }));
   }
 }
 

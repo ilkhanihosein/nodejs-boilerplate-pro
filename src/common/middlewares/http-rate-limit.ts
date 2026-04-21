@@ -14,8 +14,9 @@ function rateLimitSkip(req: { path: string }): boolean {
 
 /**
  * Global HTTP rate limiter. When **`store`** is omitted, uses the default in-memory store
- * (per process). Pass a **Redis** {@link Store} from {@link connectRateLimitRedis} for shared
- * counters across replicas.
+ * (per process) — allowed only in non-production via **`env`** (production requires
+ * **`RATE_LIMIT_REDIS_URL`**). Pass a **Redis** {@link Store} from {@link connectRateLimitRedis}
+ * for shared counters across replicas.
  */
 export function createHttpRateLimiter(store?: Store) {
   return rateLimit({
