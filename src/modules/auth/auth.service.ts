@@ -1,16 +1,26 @@
 import bcrypt from "bcryptjs";
 import { createHash, randomUUID } from "node:crypto";
-import jwt from "jsonwebtoken";
-import type { SignOptions } from "jsonwebtoken";
 
 import { AppError } from "../../common/errors/app-error.js";
 import { getLogger } from "../../common/logger.js";
-import { env } from "../../config/env.js";
 import { UserModel } from "../users/user.model.js";
 import { RefreshTokenSessionModel } from "./refresh-token.model.js";
-import type { AuthenticatedUser, JwtPayload, RefreshJwtPayload } from "./auth.types.js";
+import type {
+  AuthLogoutOkResponse,
+  AuthMeResponse,
+  AuthTokenPairResponse,
+} from "./auth.schemas.js";
+import type { AuthenticatedUser } from "./auth.types.js";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+} from "./jwt.utils.js";
 
 const SALT_ROUNDS = 10;
+
+export { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken };
 
 /** Hash user password before persistence. */
 export async function hashPassword(password: string): Promise<string> {
@@ -27,72 +37,6 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** Create short-lived stateless access token. */
-export function signAccessToken(payload: Omit<JwtPayload, "type">): string {
-  return jwt.sign({ ...payload, type: "access" }, env.jwtAccessSecret, {
-    expiresIn: env.jwtAccessTtl as NonNullable<SignOptions["expiresIn"]>,
-    issuer: "e-commerce-api",
-    audience: "e-commerce-client",
-  });
-}
-
-/** Verify access token integrity and required claims. */
-export function verifyAccessToken(token: string): JwtPayload {
-  try {
-    const decoded = jwt.verify(token, env.jwtAccessSecret, {
-      issuer: "e-commerce-api",
-      audience: "e-commerce-client",
-    });
-
-    if (typeof decoded !== "object") {
-      throw new AppError("Invalid token payload", 401, "unauthorized");
-    }
-    const payload = decoded as Partial<JwtPayload>;
-    if (!payload.sub || !payload.email || !payload.role || payload.type !== "access") {
-      throw new AppError("Invalid token payload", 401, "unauthorized");
-    }
-
-    return payload as JwtPayload;
-  } catch {
-    throw new AppError("Invalid or expired token", 401, "unauthorized");
-  }
-}
-
-/** Create long-lived refresh token; session is enforced in DB. */
-function signRefreshToken(payload: Omit<RefreshJwtPayload, "type">): string {
-  return jwt.sign({ ...payload, type: "refresh" }, env.jwtRefreshSecret, {
-    expiresIn: env.jwtRefreshTtl as NonNullable<SignOptions["expiresIn"]>,
-    issuer: "e-commerce-api",
-    audience: "e-commerce-client",
-  });
-}
-
-/** Verify refresh token signature and required claims. */
-function verifyRefreshToken(token: string): RefreshJwtPayload {
-  try {
-    const decoded = jwt.verify(token, env.jwtRefreshSecret, {
-      issuer: "e-commerce-api",
-      audience: "e-commerce-client",
-    });
-    if (typeof decoded !== "object") {
-      throw new AppError("Invalid refresh token payload", 401, "unauthorized");
-    }
-    const payload = decoded as Partial<RefreshJwtPayload>;
-    if (
-      !payload.sub ||
-      !payload.email ||
-      !payload.role ||
-      !payload.sid ||
-      payload.type !== "refresh"
-    ) {
-      throw new AppError("Invalid refresh token payload", 401, "unauthorized");
-    }
-    return payload as RefreshJwtPayload;
-  } catch {
-    throw new AppError("Invalid or expired refresh token", 401, "unauthorized");
-  }
-}
-
 /**
  * Issues a new token pair and persists refresh-session state.
  * If previousSessionId exists, the old session is revoked (rotation).
@@ -100,7 +44,7 @@ function verifyRefreshToken(token: string): RefreshJwtPayload {
 async function issueSession(
   user: AuthenticatedUser,
   previousSessionId?: string,
-): Promise<{ user: AuthenticatedUser; accessToken: string; refreshToken: string }> {
+): Promise<AuthTokenPairResponse> {
   const sessionId = randomUUID();
 
   const refreshToken = signRefreshToken({
@@ -136,7 +80,7 @@ async function issueSession(
   }
 
   return {
-    user,
+    user: { id: user.id, email: user.email, role: user.role },
     accessToken: signAccessToken({
       sub: user.id,
       email: user.email,
@@ -151,7 +95,7 @@ export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
-}): Promise<{ user: AuthenticatedUser; accessToken: string; refreshToken: string }> {
+}): Promise<AuthTokenPairResponse> {
   const email = input.email.toLowerCase();
 
   const exists = await UserModel.findOne({ email }).lean();
@@ -181,7 +125,7 @@ export async function registerUser(input: {
 export async function loginUser(input: {
   email: string;
   password: string;
-}): Promise<{ user: AuthenticatedUser; accessToken: string; refreshToken: string }> {
+}): Promise<AuthTokenPairResponse> {
   const email = input.email.toLowerCase();
 
   const userDoc = await UserModel.findOne({ email });
@@ -209,7 +153,7 @@ export async function loginUser(input: {
 /** Rotate refresh session and return a fresh token pair. */
 export async function refreshSessionTokens(input: {
   refreshToken: string;
-}): Promise<{ user: AuthenticatedUser; accessToken: string; refreshToken: string }> {
+}): Promise<AuthTokenPairResponse> {
   const payload = verifyRefreshToken(input.refreshToken);
 
   const session = await RefreshTokenSessionModel.findOne({
@@ -252,4 +196,15 @@ export async function logoutSession(input: { refreshToken: string }): Promise<vo
       $set: { revokedAt: new Date() },
     },
   );
+}
+
+export function buildAuthMeResponse(user: AuthenticatedUser): AuthMeResponse {
+  return {
+    user: { id: user.id, email: user.email, role: user.role },
+  };
+}
+
+export function buildLogoutOkResponse(): AuthLogoutOkResponse {
+  const body = { ok: true } satisfies AuthLogoutOkResponse;
+  return body;
 }

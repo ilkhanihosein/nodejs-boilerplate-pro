@@ -42,5 +42,35 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ["src/**/*.endpoints.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.object.name='res'][callee.property.name='json']",
+          message:
+            "Do not call res.json in endpoint handlers — use the `json(status, data)` helper so responses are Zod-validated.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.service.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["express", "express/*"],
+              message: "Services must not use Express; return data or throw domain errors only.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
 );

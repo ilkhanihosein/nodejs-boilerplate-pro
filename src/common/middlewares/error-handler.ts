@@ -6,6 +6,10 @@ import { AppError } from "../errors/app-error.js";
 import { httpRequestLogBase } from "../logging/http-request-log.js";
 import { getLogger } from "../logger.js";
 
+function withApiVersion<T extends Record<string, unknown>>(body: T): T & { apiVersion: string } {
+  return { ...body, apiVersion: env.apiVersion };
+}
+
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   void next;
   if (res.headersSent) {
@@ -13,39 +17,45 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({
-      error: err.message,
-      code: err.code,
-    });
+    res.status(err.statusCode).json(
+      withApiVersion({
+        error: err.message,
+        code: err.code,
+      }),
+    );
     return;
   }
 
   if (err instanceof ZodError) {
-    res.status(400).json({
-      error: "Validation failed",
-      code: "validation_error",
-      details: err.issues,
-    });
+    res.status(400).json(
+      withApiVersion({
+        error: "Validation failed",
+        code: "validation_error",
+        details: err.issues,
+      }),
+    );
     return;
   }
 
   if (err instanceof mongoose.Error.CastError) {
-    res.status(400).json({ error: "Invalid identifier", code: "bad_request" });
+    res.status(400).json(withApiVersion({ error: "Invalid identifier", code: "bad_request" }));
     return;
   }
 
   if (err instanceof mongoose.Error.ValidationError) {
     const fields = Object.keys(err.errors);
-    res.status(422).json({
-      error: "Validation failed",
-      code: "validation_error",
-      fields,
-    });
+    res.status(422).json(
+      withApiVersion({
+        error: "Validation failed",
+        code: "validation_error",
+        fields,
+      }),
+    );
     return;
   }
 
   if (isMongoDuplicateKeyError(err)) {
-    res.status(409).json({ error: "Resource already exists", code: "conflict" });
+    res.status(409).json(withApiVersion({ error: "Resource already exists", code: "conflict" }));
     return;
   }
 
@@ -68,7 +78,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       : err instanceof Error
         ? err.message
         : "Error";
-  res.status(500).json({ error: message, code: "internal_error" });
+  res.status(500).json(withApiVersion({ error: message, code: "internal_error" }));
 };
 
 function isMongoDuplicateKeyError(err: unknown): boolean {

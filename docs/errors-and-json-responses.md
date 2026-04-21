@@ -2,6 +2,8 @@
 
 Central **`errorHandler`** in **`src/common/middlewares/error-handler.ts`** turns thrown errors into JSON bodies. Success responses are chosen per handler (this document focuses on **errors** and **404**).
 
+All bodies emitted by **`errorHandler`** include **`apiVersion`** (from **`env.apiVersion`**, driven by **`API_VERSION`** / default **`1`**) so clients can correlate errors with a deployed API revision.
+
 ---
 
 ## Application errors (`AppError`)
@@ -11,7 +13,8 @@ Thrown from services and **`requireAuth`** / **`requireRole`** when you want a s
 ```json
 {
   "error": "Human-readable message",
-  "code": "machine_readable_code"
+  "code": "machine_readable_code",
+  "apiVersion": "1"
 }
 ```
 
@@ -27,6 +30,7 @@ Thrown from services and **`requireAuth`** / **`requireRole`** when you want a s
 {
   "error": "Validation failed",
   "code": "validation_error",
+  "apiVersion": "1",
   "details": [
     /* Zod issue objects */
   ]
@@ -59,10 +63,12 @@ Unhandled errors log with **`unhandled_error`** (see [logging.md](./logging.md))
 Routes that do not match any registered handler hit the **404** middleware in **`app.ts`**:
 
 ```json
-{ "error": "Not Found" }
+{ "error": "Not Found", "code": "not_found" }
 ```
 
-No **`code`** field (by design today). Add a unified shape in your fork if clients require it.
+For paths under **`API_V1_PREFIX`**, the same body includes **`apiVersion`** (from **`API_VERSION`**, default **`1`**) so clients can tell which contract they hit.
+
+Other paths (e.g. **`/old-path`**) use the same **`code`** but omit **`apiVersion`** unless you extend the middleware.
 
 ---
 

@@ -6,5 +6,9 @@ export const httpRateLimiter = rateLimit({
   limit: env.rateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === "/health" || req.path.startsWith("/health/"),
+  skip: (req) =>
+    req.path === "/health" ||
+    req.path.startsWith("/health/") ||
+    req.path === "/docs" ||
+    req.path.startsWith("/docs/"),
 });

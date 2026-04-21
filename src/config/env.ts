@@ -112,6 +112,9 @@ const rawEnvSchema = z.object({
   MONGODB_URI: z.string().trim().min(1, "MONGODB_URI must be set"),
   REQUEST_BODY_LIMIT: z.string().optional(),
   API_V1_PREFIX: z.string().optional(),
+  API_VERSION: z.string().optional(),
+  API_DOCS_ENABLED: z.string().optional(),
+  GIT_SHA: z.string().optional(),
   JWT_ACCESS_SECRET: z
     .string()
     .trim()
@@ -139,6 +142,9 @@ const envSchema = rawEnvSchema.transform((raw) => {
     mongodbUri: raw.MONGODB_URI,
     bodyLimit: parseBodyLimit(raw.REQUEST_BODY_LIMIT),
     apiV1Prefix,
+    apiVersion: raw.API_VERSION?.trim() || "1",
+    apiDocsEnabled: parseBool(raw.API_DOCS_ENABLED, nodeEnv !== "production"),
+    gitSha: raw.GIT_SHA?.trim() || undefined,
     jwtAccessSecret: raw.JWT_ACCESS_SECRET,
     jwtAccessTtl: raw.JWT_ACCESS_TTL?.trim() || "15m",
     jwtRefreshSecret: raw.JWT_REFRESH_SECRET,

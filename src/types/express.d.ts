@@ -1,3 +1,5 @@
+import type { AuthenticatedUser } from "../modules/auth/auth.types.js";
+
 export {};
 
 declare global {
@@ -13,11 +15,8 @@ declare global {
         query?: unknown;
         params?: unknown;
       };
-      authUser?: {
-        id: string;
-        email: string;
-        role: "customer" | "admin";
-      };
+      /** Set by `requireAuth` after successful bearer verification. */
+      authUser?: AuthenticatedUser;
     }
   }
 }

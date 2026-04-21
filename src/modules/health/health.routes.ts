@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { getHealth, getHealthReady } from "./health.controller.js";
+import { healthEndpointRegistry } from "./health.endpoints.js";
 
 export const healthRouter = Router();
 
-healthRouter.get("/", getHealth);
-healthRouter.get("/ready", getHealthReady);
+healthEndpointRegistry.mount(healthRouter);

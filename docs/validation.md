@@ -2,7 +2,7 @@
 
 These patterns are **reusable defaults**; you can keep them for every new route or wrap them differently in your own codebase.
 
-**Zod** runs **once** in middleware. Handlers read **trusted** values from **`req.validated`** using small **reader** helpers and TypeScript generics—**no** second **`parse`** in controllers.
+**Zod** runs **once** in **`validateRequest`**. **`definePublicEndpoint` / `defineProtectedEndpoint`** copy slices into **`validated`** via **`buildValidatedBagFromRequest`** (no second **`parse`**). Legacy handlers can use **`requireValidated*`** readers—also no re-**`parse`**.
 
 ---
 
@@ -94,10 +94,17 @@ export const createItemHandler: RequestHandler = async (req, res, next) => {
 
 ## Files
 
-| File                                         | Purpose                        |
-| -------------------------------------------- | ------------------------------ |
-| `src/common/middlewares/validate-request.ts` | Middleware + readers           |
-| `src/types/express.d.ts`                     | **`Request.validated`** typing |
-| `src/common/middlewares/error-handler.ts`    | **`ZodError`** → HTTP response |
+| File                                         | Purpose                                           |
+| -------------------------------------------- | ------------------------------------------------- |
+| `src/common/middlewares/validate-request.ts` | Middleware + readers                              |
+| `src/types/express.d.ts`                     | **`Request.validated`** typing                    |
+| `src/common/middlewares/error-handler.ts`    | **`ZodError`** → HTTP response                    |
+| `src/common/http/offset-pagination.ts`       | Shared list **`query`** schemas (offset + cursor) |
 
 See [request-lifecycle.md](./request-lifecycle.md) for where validation sits in the pipeline.
+
+---
+
+## List query helpers (pagination)
+
+Shared **Zod** query schemas for **`?page=&limit=`** and **`?cursor=&limit=`** live in **`src/common/http/offset-pagination.ts`**. Pair **`validateRequest({ query: offsetPaginationQuerySchema })`** (or the cursor schema) with **`resolveOffsetPagination`** for skip/limit. Add a **sort** convention in the same area when you standardize list endpoints.

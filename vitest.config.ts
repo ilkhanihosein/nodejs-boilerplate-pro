@@ -8,6 +8,7 @@ const testMongoUri = "mongodb://127.0.0.1:27017/vitest-placeholder-uri";
 export default defineConfig({
   test: {
     environment: "node",
+    setupFiles: ["./tests/vitest-setup.ts"],
     include: ["tests/**/*.test.ts"],
     passWithNoTests: false,
     env: {

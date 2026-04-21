@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
+import type { Types } from "mongoose";
 
 export const USER_ROLES = ["customer", "admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
@@ -17,4 +18,13 @@ const userSchema = new Schema(
 );
 
 export type UserDocument = InferSchemaType<typeof userSchema> & { _id: string };
+
+/** User row from `lean()` when `passwordHash` is omitted from the projection. */
+export type UserLeanPublic = {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  role: UserRole;
+};
+
 export const UserModel = model("User", userSchema);

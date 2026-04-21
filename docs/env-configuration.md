@@ -18,23 +18,26 @@ Application code should import **`env`** (or pass values derived from it), not r
 
 ## Variables (process → `env`)
 
-| `process.env`          | Required? | Default / behavior                                       | `env` property                      |
-| ---------------------- | --------- | -------------------------------------------------------- | ----------------------------------- |
-| `NODE_ENV`             | No        | `"development"` if unset                                 | `nodeEnv`                           |
-| `PORT`                 | No        | `3000` if invalid/unset                                  | `port`                              |
-| `LOG_LEVEL`            | No        | `info` in production, `debug` otherwise if invalid/unset | `logLevel`                          |
-| `RATE_LIMIT_WINDOW_MS` | No        | `60000`                                                  | `rateLimitWindowMs`                 |
-| `RATE_LIMIT_MAX`       | No        | `300`                                                    | `rateLimitMax`                      |
-| `CORS_ORIGIN`          | No        | See parsing below                                        | `corsOrigin`                        |
-| `CORS_CREDENTIALS`     | No        | `false`                                                  | `corsCredentials`                   |
-| `TRUST_PROXY`          | No        | `false`                                                  | `trustProxy` (boolean or hop count) |
-| `MONGODB_URI`          | **Yes**   | —                                                        | `mongodbUri`                        |
-| `REQUEST_BODY_LIMIT`   | No        | `"1mb"`                                                  | `bodyLimit`                         |
-| `API_V1_PREFIX`        | No        | `"/api/v1"`; must start with `/`, no `..`                | `apiV1Prefix`                       |
-| `JWT_ACCESS_SECRET`    | **Yes**   | —                                                        | `jwtAccessSecret`                   |
-| `JWT_REFRESH_SECRET`   | **Yes**   | —                                                        | `jwtRefreshSecret`                  |
-| `JWT_ACCESS_TTL`       | No        | `"15m"`                                                  | `jwtAccessTtl`                      |
-| `JWT_REFRESH_TTL`      | No        | `"7d"`                                                   | `jwtRefreshTtl`                     |
+| `process.env`          | Required? | Default / behavior                                       | `env` property                        |
+| ---------------------- | --------- | -------------------------------------------------------- | ------------------------------------- |
+| `NODE_ENV`             | No        | `"development"` if unset                                 | `nodeEnv`                             |
+| `PORT`                 | No        | `3000` if invalid/unset                                  | `port`                                |
+| `LOG_LEVEL`            | No        | `info` in production, `debug` otherwise if invalid/unset | `logLevel`                            |
+| `RATE_LIMIT_WINDOW_MS` | No        | `60000`                                                  | `rateLimitWindowMs`                   |
+| `RATE_LIMIT_MAX`       | No        | `300`                                                    | `rateLimitMax`                        |
+| `CORS_ORIGIN`          | No        | See parsing below                                        | `corsOrigin`                          |
+| `CORS_CREDENTIALS`     | No        | `false`                                                  | `corsCredentials`                     |
+| `TRUST_PROXY`          | No        | `false`                                                  | `trustProxy` (boolean or hop count)   |
+| `MONGODB_URI`          | **Yes**   | —                                                        | `mongodbUri`                          |
+| `REQUEST_BODY_LIMIT`   | No        | `"1mb"`                                                  | `bodyLimit`                           |
+| `API_V1_PREFIX`        | No        | `"/api/v1"`; must start with `/`, no `..`                | `apiV1Prefix`                         |
+| `API_VERSION`          | No        | `"1"` if unset/empty                                     | `apiVersion` (errors, health, JSON)   |
+| `API_DOCS_ENABLED`     | No        | `true` when `NODE_ENV !== "production"`, else `false`    | `apiDocsEnabled` (Swagger at `/docs`) |
+| `GIT_SHA`              | No        | omitted if unset/empty                                   | `gitSha` (optional on `/health`)      |
+| `JWT_ACCESS_SECRET`    | **Yes**   | —                                                        | `jwtAccessSecret`                     |
+| `JWT_REFRESH_SECRET`   | **Yes**   | —                                                        | `jwtRefreshSecret`                    |
+| `JWT_ACCESS_TTL`       | No        | `"15m"`                                                  | `jwtAccessTtl`                        |
+| `JWT_REFRESH_TTL`      | No        | `"7d"`                                                   | `jwtRefreshTtl`                       |
 
 **CORS:** if `CORS_ORIGIN` is unset, development allows all origins (`true`); production disables CORS (`false`). Comma-separated values become a list of allowed origins.
 

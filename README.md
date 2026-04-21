@@ -10,7 +10,7 @@
 
 ## Documentation
 
-All architecture and system behavior are documented under **[`docs/`](./docs)**. Start at **[`docs/README.md`](./docs/README.md)** (index: architecture, auth, CI/hooks, database migrations/seed, Docker/local dev, env, errors, testing, troubleshooting, security, logging, validation, lifecycle, async context).
+All architecture and system behavior are documented under **[`docs/`](./docs)**. Start at **[`docs/README.md`](./docs/README.md)** (index: architecture, auth, CI/hooks, database migrations/seed, Docker/local dev, env, errors, testing, troubleshooting, security, logging, validation, lifecycle, async context). **OpenAPI:** Swagger UI at **`/docs`** when **`API_DOCS_ENABLED`** is on (default in non-production). The spec is **generated from Zod** (`@asteasolutions/zod-to-openapi`); add a **`registerPath`** in **`src/api/v1/openapi.ts`** using the same request schemas as **`validateRequest`** — see **[`docs/openapi.md`](./docs/openapi.md)**.
 
 ---
 

@@ -1,7 +1,10 @@
+import "./config/zod-openapi-init.js";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
 import { apiV1Router } from "./api/v1/routes.js";
+import { buildOpenApiV1Document } from "./api/v1/openapi.js";
 import { bindRequestContext } from "./common/middlewares/bind-request-context.js";
 import { errorHandler } from "./common/middlewares/error-handler.js";
 import { httpLogger, requestLifecycleLogger } from "./common/middlewares/http-logger.js";
@@ -17,6 +20,19 @@ export function createApp(): express.Express {
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: "cross-origin" },
+      ...(env.apiDocsEnabled
+        ? {
+            contentSecurityPolicy: {
+              directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "blob:"],
+                workerSrc: ["'self'", "blob:"],
+              },
+            },
+          }
+        : {}),
     }),
   );
   app.use(
@@ -35,8 +51,20 @@ export function createApp(): express.Express {
   app.use("/health", healthRouter);
   app.use(env.apiV1Prefix, apiV1Router);
 
-  app.use((_req, res) => {
-    res.status(404).json({ error: "Not Found" });
+  if (env.apiDocsEnabled) {
+    const openApiSpec = buildOpenApiV1Document();
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  }
+
+  app.use((req, res) => {
+    const underApi = req.path === env.apiV1Prefix || req.path.startsWith(`${env.apiV1Prefix}/`);
+    res
+      .status(404)
+      .json(
+        underApi
+          ? { error: "Not Found", code: "not_found", apiVersion: env.apiVersion }
+          : { error: "Not Found", code: "not_found" },
+      );
   });
 
   app.use(errorHandler);

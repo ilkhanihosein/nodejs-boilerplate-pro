@@ -1,7 +1,11 @@
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
 import { AppError } from "../errors/app-error.js";
 import { verifyAccessToken } from "../../modules/auth/auth.service.js";
+import type { AuthenticatedUser } from "../../modules/auth/auth.types.js";
 import type { UserRole } from "../../modules/users/user.model.js";
+
+/** `Request` after `requireAuth` has run successfully. */
+export type AuthenticatedRequest = Request & { authUser: AuthenticatedUser };
 
 function readBearerToken(authorization: string | undefined): string {
   if (!authorization) {

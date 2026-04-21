@@ -17,6 +17,19 @@ Access and refresh tokens are signed with fixed **`issuer`** and **`audience`** 
 
 ---
 
+## Code layout (JWT)
+
+Verification and signing are intentionally flat—no strategy or dispatcher layer.
+
+| File                                   | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`src/modules/auth/jwt.utils.ts`**    | **`jwt.sign`** / **`jwt.verify`** with the same **`issuer`** / **`audience`** as signing, then **Zod** on the decoded object using **`accessJwtPayloadSchema`** and **`refreshJwtPayloadSchema`** from **`auth.schemas.ts`**. Maps **`jwt`** / **Zod** failures to **`AppError`** (401), with separate messages for bad payload vs bad or expired cryptography (access vs refresh each have their own strings). |
+| **`src/modules/auth/auth.service.ts`** | Re-exports **`signAccessToken`**, **`signRefreshToken`**, **`verifyAccessToken`**, and **`verifyRefreshToken`** from **`jwt.utils`** so callers use one module; owns **register**, **login**, **refresh**, **logout**, and **refresh session** persistence.                                                                                                                                                     |
+
+**Call convention:** feature code and **`requireAuth`** should import token helpers from **`auth.service`**, not from **`jwt.utils`**, unless you are editing JWT behavior itself.
+
+---
+
 ## HTTP routes (under **`API_V1_PREFIX`**, default **`/api/v1`**)
 
 Mounted as **`/auth`** in **`src/api/v1/routes.ts`**:
@@ -35,7 +48,7 @@ Mounted as **`/auth`** in **`src/api/v1/routes.ts`**:
 
 ## Middleware
 
-- **`requireAuth`** — reads **`Authorization: Bearer`**, verifies access JWT, sets **`req.authUser`** (`id`, `email`, **`role`**).
+- **`requireAuth`** — reads **`Authorization: Bearer`**, calls **`verifyAccessToken`** from **`auth.service`**, sets **`req.authUser`** (`id`, `email`, **`role`**).
 - **`requireRole(...roles)`** — after **`requireAuth`**, returns **403** if **`req.authUser.role`** is not in the list.
 
 Passwords are hashed with **bcrypt** before save (**`auth.service`** / user registration).
