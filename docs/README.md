@@ -6,6 +6,7 @@ These files describe **how this boilerplate is wired**, so you can keep the patt
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [boilerplate-requirements.md](./boilerplate-requirements.md)                 | Pro boilerplate checklist (Must/Should/Could) — domain-agnostic.                          |
 | [openapi.md](./openapi.md)                                                   | Zod-generated OpenAPI, `/docs`, extending `openapi.ts`.                                   |
+| [openapi-client-guide.md](./openapi-client-guide.md)                         | Type-safe frontend client: codegen, `createApi`, manual vs generated, workflow.           |
 | [architecture.md](./architecture.md)                                         | Layers (`api` vs `modules`), adapting the template.                                       |
 | [authentication-and-authorization.md](./authentication-and-authorization.md) | JWT access/refresh, `jwt.utils` + `auth.service`, sessions, `requireAuth`, `requireRole`. |
 | [ci-and-git-hooks.md](./ci-and-git-hooks.md)                                 | GitHub Actions `check`, Husky, lint-staged.                                               |

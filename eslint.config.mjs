@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", "migrations/**"],
+    ignores: ["dist/**", "node_modules/**", "migrations/**", "generated/**"],
   },
   eslint.configs.recommended,
   {
@@ -18,7 +18,13 @@ export default tseslint.config(
   },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ["tests/**/*.ts", "vitest.config.ts", "migrate-mongo-config.ts"],
+    files: [
+      "tests/**/*.ts",
+      "vitest.config.ts",
+      "migrate-mongo-config.ts",
+      "frontend/**/*.ts",
+      "scripts/**/*.ts",
+    ],
     languageOptions: {
       ...config.languageOptions,
       globals: {

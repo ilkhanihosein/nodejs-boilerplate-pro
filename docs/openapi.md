@@ -29,5 +29,6 @@ The document at **`/docs`** (when **`API_DOCS_ENABLED`**) is built by **`buildOp
 
 ## Related
 
+- [openapi-client-guide.md](./openapi-client-guide.md) — OpenAPI → `generated/api-types.ts` → `frontend/api` (`createApi`, `openapi:generate`).
 - [env-configuration.md](./env-configuration.md)
 - [validation.md](./validation.md)
