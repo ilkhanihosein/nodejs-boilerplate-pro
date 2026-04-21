@@ -2,6 +2,8 @@
 
 High-level layout for this boilerplate: how HTTP entry, feature modules, shared infrastructure, and configuration fit together. **Path names** are defaults; rename, split, or delete folders as your product grows.
 
+**Product scope and deployment assumptions** (API-only, Docker-first, replica-aware design, MongoDB-only): [project-context.md](./project-context.md).
+
 ---
 
 ## Adapting the boilerplate

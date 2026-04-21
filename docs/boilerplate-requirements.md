@@ -19,7 +19,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 1. API contract and consumer experience
 
-- **OpenAPI 3** — **Partially done:** Swagger UI at **`/docs`**; spec **generated from Zod** in **`src/api/v1/openapi.ts`** via **`@asteasolutions/zod-to-openapi`** (request shapes reuse validation schemas). **Still open:** optional **CI** check, splitting large **`registerPath`** lists per module, and tightening **response** schemas to match handlers everywhere.
+- **OpenAPI 3** — **Partially done:** Swagger UI at **`/docs`**; spec **generated from Zod** in **`src/api/v1/openapi.ts`** via **`@asteasolutions/zod-to-openapi`** (request shapes reuse validation schemas). **CI:** **`npm run openapi:check`** (in **`npm run check`**) fails if **`generated/openapi.json`** drifts from **`buildOpenApiV1Document()`**; regenerate with **`npm run openapi:generate`**. **Still open:** splitting large path lists per module (if registries grow), and tightening any remaining **response** schemas.
 - **API version** — **Done:** **`X-API-Version`** on all responses under the versioned API router; **`apiVersion`** on **`errorHandler`** JSON, **`/health`**, **`/health/ready`**, sample **`GET`** handlers under v1, and **404** under **`API_V1_PREFIX`**. Configure with **`API_VERSION`** (default **`1`**). Optional **`GIT_SHA`** on health for deploys.
 - **Pagination / filtering / sorting** — **Partially done:** shared **offset** and **cursor** query schemas + **`resolveOffsetPagination`** in **`src/common/http/offset-pagination.ts`**. **Still open:** a documented **sort** convention and adoption on real list endpoints (wire `validateRequest` + these schemas).
 

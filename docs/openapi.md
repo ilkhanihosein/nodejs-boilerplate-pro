@@ -27,8 +27,15 @@ The document at **`/docs`** (when **`API_DOCS_ENABLED`**) is built by **`buildOp
 
 **`extendZodWithOpenApi`** — **`src/config/zod-openapi-init.ts`** (imported from **`src/app.ts`** and test setup).
 
+## CI and drift
+
+- **`npm run openapi:check`** — builds the document from **`buildOpenApiV1Document()`**, normalizes JSON (sorted object keys), and compares to **`generated/openapi.json`**. Fails if the committed artifact is missing or out of date.
+- **`npm run check`** (including **GitHub Actions** on PRs) runs **`openapi:check`** after **`npm run build`**.
+- After registry or schema changes: **`npm run openapi:generate`**, commit **`generated/openapi.json`** (and **`generated/api-types.ts`** if you use the client types).
+
 ## Related
 
 - [openapi-client-guide.md](./openapi-client-guide.md) — OpenAPI → `generated/api-types.ts` → `frontend/api` (`createApi`, `openapi:generate`).
 - [env-configuration.md](./env-configuration.md)
 - [validation.md](./validation.md)
+- [http-list-endpoints.md](./http-list-endpoints.md) — pagination + sort checklist for collection routes.

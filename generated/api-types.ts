@@ -497,6 +497,19 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Invalid, expired, or wrong-type token (logout uses refresh JWT only) */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                            code: string;
+                            apiVersion: string;
+                        };
+                    };
+                };
             };
         };
         delete?: never;
@@ -575,7 +588,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, updatedAt:asc. */
+                    /** @description Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, createdAt:asc. */
                     sort?: string;
                 };
                 header?: never;
@@ -595,7 +608,8 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string;
-                                role: string;
+                                /** @enum {string} */
+                                role: "customer" | "admin";
                             } & {
                                 [key: string]: unknown;
                             })[];
@@ -682,7 +696,8 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string;
-                                role: string;
+                                /** @enum {string} */
+                                role: "customer" | "admin";
                             } & {
                                 [key: string]: unknown;
                             };
@@ -795,7 +810,8 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string;
-                                role: string;
+                                /** @enum {string} */
+                                role: "customer" | "admin";
                             } & {
                                 [key: string]: unknown;
                             };

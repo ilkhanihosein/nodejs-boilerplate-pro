@@ -26,7 +26,7 @@ export const userListItemResponseSchema = z
     _id: z.string(),
     name: z.string(),
     email: z.string(),
-    role: z.string(),
+    role: z.enum(USER_ROLES),
   })
   .loose();
 

@@ -15,4 +15,5 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      # format, lint, test, typecheck:frontend, build, openapi:check (generated/openapi.json drift)
       - run: npm run check

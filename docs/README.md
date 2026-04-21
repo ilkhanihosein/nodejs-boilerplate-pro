@@ -4,6 +4,8 @@ These files describe **how this boilerplate is wired**, so you can keep the patt
 
 | Document                                                                     | Description                                                                               |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [project-context.md](./project-context.md)                                   | Scope and assumptions: API-only, Docker-first, replica-ready design, MongoDB-only.        |
+| [http-list-endpoints.md](./http-list-endpoints.md)                           | Checklist for new list `GET`s: shared pagination + sort helpers and OpenAPI.              |
 | [boilerplate-requirements.md](./boilerplate-requirements.md)                 | Pro boilerplate checklist (Must/Should/Could) — domain-agnostic.                          |
 | [observability.md](./observability.md)                                       | OpenTelemetry tracing, Prometheus `/metrics`, env flags, log correlation.                 |
 | [openapi.md](./openapi.md)                                                   | Zod-generated OpenAPI, `/docs`, extending `openapi.ts`.                                   |

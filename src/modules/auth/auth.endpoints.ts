@@ -109,6 +109,10 @@ const logoutEndpoint = definePublicEndpoint({
       schema: authLogoutOkResponseSchema,
     },
     400: { description: "Validation error", schema: validationErrorResponseSchema },
+    401: {
+      description: "Invalid, expired, or wrong-type token (logout uses refresh JWT only)",
+      schema: appErrorResponseSchema,
+    },
   },
   handler: async ({ validated, json }) => {
     await logoutSession(validated.body);
