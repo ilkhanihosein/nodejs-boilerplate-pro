@@ -11,10 +11,12 @@ import {
   type RefreshJwtPayload,
 } from "./auth.schemas.js";
 
-const jwtVerifyOptions: VerifyOptions = {
-  issuer: "e-commerce-api",
-  audience: "e-commerce-client",
-};
+function jwtVerifyOptions(): VerifyOptions {
+  return {
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
+  };
+}
 
 type VerifyAndParseJwtParams<T> = {
   token: string;
@@ -60,8 +62,8 @@ function verifyAndParseJwt<T>({
 export function signAccessToken(payload: Omit<JwtPayload, "type">): string {
   return jwt.sign({ ...payload, type: "access" }, env.jwtAccessSecret, {
     expiresIn: env.jwtAccessTtl as NonNullable<SignOptions["expiresIn"]>,
-    issuer: "e-commerce-api",
-    audience: "e-commerce-client",
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
   });
 }
 
@@ -69,8 +71,8 @@ export function signAccessToken(payload: Omit<JwtPayload, "type">): string {
 export function signRefreshToken(payload: Omit<RefreshJwtPayload, "type">): string {
   return jwt.sign({ ...payload, type: "refresh" }, env.jwtRefreshSecret, {
     expiresIn: env.jwtRefreshTtl as NonNullable<SignOptions["expiresIn"]>,
-    issuer: "e-commerce-api",
-    audience: "e-commerce-client",
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
   });
 }
 
@@ -79,7 +81,7 @@ export function verifyAccessToken(token: string): JwtPayload {
   return verifyAndParseJwt({
     token,
     secret: env.jwtAccessSecret,
-    verifyOptions: jwtVerifyOptions,
+    verifyOptions: jwtVerifyOptions(),
     schema: accessJwtPayloadSchema,
     payloadInvalidMessage: "Invalid token payload",
     cryptoInvalidMessage: "Invalid or expired token",
@@ -91,7 +93,7 @@ export function verifyRefreshToken(token: string): RefreshJwtPayload {
   return verifyAndParseJwt({
     token,
     secret: env.jwtRefreshSecret,
-    verifyOptions: jwtVerifyOptions,
+    verifyOptions: jwtVerifyOptions(),
     schema: refreshJwtPayloadSchema,
     payloadInvalidMessage: "Invalid refresh token payload",
     cryptoInvalidMessage: "Invalid or expired refresh token",

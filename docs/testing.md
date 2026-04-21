@@ -6,10 +6,11 @@ Integration and unit tests use **Vitest**. HTTP-level tests use **supertest** ag
 
 ## Layout
 
-| Path                          | Role                                    |
-| ----------------------------- | --------------------------------------- |
-| `tests/*.integration.test.ts` | HTTP + app wiring (supertest)           |
-| `tests/*.unit.test.ts`        | Pure units (optional naming convention) |
+| Path                                  | Role                                                              |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `tests/*.integration.test.ts`         | HTTP + app wiring (supertest); may use **mongodb-memory-server**  |
+| `tests/*.unit.test.ts`                | Pure units (optional naming convention)                           |
+| `tests/openapi.contract.unit.test.ts` | OpenAPI smoke: **`buildOpenApiV1Document()`** paths vs registries |
 
 `vitest.config.ts` sets **`include: ["tests/**/\*.test.ts"]`\*\*.
 

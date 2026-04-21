@@ -149,6 +149,10 @@ const rawEnvSchema = z.object({
     .min(1, "JWT_REFRESH_SECRET must be set (e.g. in .env); no default is applied"),
   JWT_ACCESS_TTL: z.string().optional(),
   JWT_REFRESH_TTL: z.string().optional(),
+  /** JWT `iss` claim (sign + verify). Defaults match historical boilerplate tokens. */
+  JWT_ISSUER: z.string().optional(),
+  /** JWT `aud` claim (sign + verify). Must match what clients send / expect. */
+  JWT_AUDIENCE: z.string().optional(),
   OBSERVABILITY_TRACING_ENABLED: z.string().optional(),
   OBSERVABILITY_METRICS_ENABLED: z.string().optional(),
   OBSERVABILITY_TRACING_EXPORTER: z.string().optional(),
@@ -185,6 +189,14 @@ function envTransform(raw: z.infer<typeof rawEnvSchema>) {
     jwtAccessTtl: raw.JWT_ACCESS_TTL?.trim() || "15m",
     jwtRefreshSecret: raw.JWT_REFRESH_SECRET,
     jwtRefreshTtl: raw.JWT_REFRESH_TTL?.trim() || "7d",
+    jwtIssuer: (() => {
+      const s = raw.JWT_ISSUER?.trim();
+      return s !== undefined && s.length > 0 ? s : "e-commerce-api";
+    })(),
+    jwtAudience: (() => {
+      const s = raw.JWT_AUDIENCE?.trim();
+      return s !== undefined && s.length > 0 ? s : "e-commerce-client";
+    })(),
     observabilityTracingEnabled: parseBool(raw.OBSERVABILITY_TRACING_ENABLED, false),
     observabilityMetricsEnabled: parseBool(raw.OBSERVABILITY_METRICS_ENABLED, false),
     observabilityTracingExporter: parseTracingExporter(raw.OBSERVABILITY_TRACING_EXPORTER),

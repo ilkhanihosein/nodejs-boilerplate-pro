@@ -51,7 +51,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 ### 6. Testing and delivery quality
 
 - **Coverage thresholds** — **Done:** **`vitest.config.ts`** V8 thresholds; **`npm run test:ci`** runs **`vitest run --coverage`** in CI.
-- **API contract** tests or OpenAPI-derived smoke tests (optional but valuable).
+- **API contract** tests or OpenAPI-derived smoke tests — **Done (smoke):** **`tests/openapi.contract.unit.test.ts`** asserts core **`paths`** and **`GET /users`** query parameters from **`buildOpenApiV1Document()`**; **`tests/users.integration.test.ts`** exercises pagination against MongoDB in memory.
 - **Load testing** / k6 as a separate script (even a tiny example).
 
 ### 7. Release and deployment
@@ -158,11 +158,11 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ## 9. Testing and code quality
 
-| ID   | Requirement                                               | Level  | Acceptance            | Status in this repo                                     |
-| ---- | --------------------------------------------------------- | ------ | --------------------- | ------------------------------------------------------- |
-| R9.1 | API integration tests without mandatory external services | Must   | In-memory DB or mocks | Done                                                    |
-| R9.2 | Pre-commit or equivalent (format/lint on staged)          | Should | —                     | Done (husky + lint-staged)                              |
-| R9.3 | Coverage thresholds in CI                                 | Could  | —                     | Done (`vitest` V8 thresholds in **`vitest.config.ts`**) |
+| ID   | Requirement                                               | Level  | Acceptance            | Status in this repo                                                                                         |
+| ---- | --------------------------------------------------------- | ------ | --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| R9.1 | API integration tests without mandatory external services | Must   | In-memory DB or mocks | Done — auth + users list (**MongoMemoryServer**); OpenAPI path smoke in **`openapi.contract.unit.test.ts`** |
+| R9.2 | Pre-commit or equivalent (format/lint on staged)          | Should | —                     | Done (husky + lint-staged)                                                                                  |
+| R9.3 | Coverage thresholds in CI                                 | Could  | —                     | Done (`vitest` V8 thresholds in **`vitest.config.ts`**)                                                     |
 
 ---
 
