@@ -19,9 +19,14 @@ Configured from **`env.corsOrigin`** and **`env.corsCredentials`**. In **develop
 
 ## Rate limiting
 
-**`express-rate-limit`** uses **`RATE_LIMIT_WINDOW_MS`** and **`RATE_LIMIT_MAX`** (per client IP, sliding window). **`GET /health`** and **`GET /health/ready`** are **skipped** so orchestrators are not throttled.
+**`express-rate-limit`** uses **`RATE_LIMIT_WINDOW_MS`** and **`RATE_LIMIT_MAX`** (per client IP, sliding window). **`GET /health`**, **`GET /health/ready`**, **`/docs`**, and **`GET /metrics`** are **skipped** so probes and docs are not throttled.
 
-**Multi-instance caveat:** the default store is **in-memory**. Each process has its own counters. Behind several API replicas, a client can exceed the intended global budget unless you plug in a **shared store** (for example Redis) via the rate-limit middleware options in your fork.
+**Store:**
+
+- **Default:** in-memory counters (**one process**). Fine for local dev or a single container.
+- **Multi-replica / several pods:** set **`RATE_LIMIT_REDIS_URL`** to a **`redis://`** or **`rediss://`** URL. **`server.ts`** connects with **`node-redis`**, builds **`rate-limit-redis`**’s **`RedisStore`**, and passes it into **`createApp({ rateLimitStore })`**. Keys use the prefix **`rl:http:`** in Redis. On shutdown the client is closed after the HTTP server stops accepting connections.
+
+Compose ships an optional **`redis`** service; uncomment **`RATE_LIMIT_REDIS_URL`** on the **`api`** service in **`docker-compose.yml`** when you want shared limits in Docker.
 
 ---
 

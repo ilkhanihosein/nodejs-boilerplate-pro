@@ -1,9 +1,11 @@
 import "./observability/tracing.js";
 import { createApp } from "./app.js";
 import { getLogger } from "./common/logger.js";
+import { connectRateLimitRedis } from "./config/connect-rate-limit-redis.js";
 import { connectMongo, disconnectMongo } from "./config/database.js";
 import { env } from "./config/env.js";
 import { shutdownTracing } from "./observability/tracing.js";
+import type { Store } from "express-rate-limit";
 import type { Server } from "node:http";
 import type { Socket } from "node:net";
 
@@ -67,7 +69,16 @@ async function bootstrap(): Promise<void> {
   await connectMongo(env.mongodbUri);
   getLogger().info("mongodb_connected");
 
-  const app = createApp();
+  let rateLimitRedisDisconnect: (() => Promise<void>) | undefined;
+  let rateLimitStore: Store | undefined;
+
+  if (env.rateLimitRedisUrl !== undefined) {
+    const redisRl = await connectRateLimitRedis(env.rateLimitRedisUrl);
+    rateLimitStore = redisRl.store;
+    rateLimitRedisDisconnect = redisRl.disconnect;
+  }
+
+  const app = createApp(rateLimitStore !== undefined ? { rateLimitStore } : {});
   const server: Server = app.listen(env.port, () => {
     getLogger().info({ port: env.port }, "server_listening");
   });
@@ -114,6 +125,12 @@ async function bootstrap(): Promise<void> {
     server.close((closeErr?: Error) => {
       void (async () => {
         await shutdownTracing();
+
+        try {
+          await rateLimitRedisDisconnect?.();
+        } catch (err: unknown) {
+          getLogger().warn({ err }, "rate_limit_redis_shutdown_error");
+        }
 
         let mongoDisconnectFailed = false;
 

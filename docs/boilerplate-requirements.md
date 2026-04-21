@@ -29,7 +29,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 3. Security and multi-instance production
 
-- **In-memory rate limiting** is insufficient behind several replicas (also documented); add a **Redis store sample** or at least an **interface + “how to wire Redis”** doc.
+- **In-memory rate limiting** — **Done (optional Redis):** set **`RATE_LIMIT_REDIS_URL`** to **`redis://`** or **`rediss://`** for **`rate-limit-redis`** + **`node-redis`** in **`server.ts`**; Compose includes a **`redis`** service (uncomment **`RATE_LIMIT_REDIS_URL`** on **`api`** when needed). Single-instance default remains in-memory.
 - **Dependabot / Renovate** for dependencies.
 - Run **`npm audit`** (or equivalent) in CI with an explicit policy (fail vs report-only).
 - If **cookies / sessions** are added later, document **CSRF** and the threat model; today JWT Bearer is the pattern and is common for SPAs.
@@ -102,14 +102,14 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ## 4. HTTP security and web attack surface
 
-| ID   | Requirement                                             | Level  | Acceptance                    | Status in this repo                        |
-| ---- | ------------------------------------------------------- | ------ | ----------------------------- | ------------------------------------------ |
-| R4.1 | Baseline security headers (Helmet or equivalent)        | Must   | —                             | Done                                       |
-| R4.2 | Per-environment CORS                                    | Must   | Safe production defaults      | Done                                       |
-| R4.3 | Rate limiting with health exclusions                    | Must   | —                             | Done                                       |
-| R4.4 | Configurable `trust proxy` for real client IP behind LB | Must   | Documented                    | Done                                       |
-| R4.5 | Shared store for rate limit across replicas             | Should | Redis or “how to plug in” doc | Doc warning only; no sample implementation |
-| R4.6 | Dependency automation (Dependabot / audit in CI)        | Should | Clear fail vs warn policy     | Dependabot not configured; audit not in CI |
+| ID   | Requirement                                             | Level  | Acceptance                    | Status in this repo                                                                               |
+| ---- | ------------------------------------------------------- | ------ | ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| R4.1 | Baseline security headers (Helmet or equivalent)        | Must   | —                             | Done                                                                                              |
+| R4.2 | Per-environment CORS                                    | Must   | Safe production defaults      | Done                                                                                              |
+| R4.3 | Rate limiting with health exclusions                    | Must   | —                             | Done                                                                                              |
+| R4.4 | Configurable `trust proxy` for real client IP behind LB | Must   | Documented                    | Done                                                                                              |
+| R4.5 | Shared store for rate limit across replicas             | Should | Redis or “how to plug in” doc | Done: **`RATE_LIMIT_REDIS_URL`** + **`connect-rate-limit-redis.ts`**; Compose **`redis`** service |
+| R4.6 | Dependency automation (Dependabot / audit in CI)        | Should | Clear fail vs warn policy     | Dependabot not configured; audit not in CI                                                        |
 
 ---
 

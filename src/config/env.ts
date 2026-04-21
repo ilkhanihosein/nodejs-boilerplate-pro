@@ -126,6 +126,8 @@ const rawEnvSchema = z.object({
   LOG_LEVEL: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.string().optional(),
   RATE_LIMIT_MAX: z.string().optional(),
+  /** When set, `express-rate-limit` uses Redis (`rate-limit-redis`) so limits are shared across processes/replicas. */
+  RATE_LIMIT_REDIS_URL: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),
   CORS_CREDENTIALS: z.string().optional(),
   TRUST_PROXY: z.string().optional(),
@@ -163,6 +165,10 @@ function envTransform(raw: z.infer<typeof rawEnvSchema>) {
     logLevel: parseLogLevel(raw.LOG_LEVEL, nodeEnv),
     rateLimitWindowMs: parsePositiveInt(raw.RATE_LIMIT_WINDOW_MS, 60_000),
     rateLimitMax: parsePositiveInt(raw.RATE_LIMIT_MAX, 300),
+    rateLimitRedisUrl: (() => {
+      const u = raw.RATE_LIMIT_REDIS_URL?.trim();
+      return u !== undefined && u.length > 0 ? u : undefined;
+    })(),
     corsOrigin: parseCorsOrigin(raw.CORS_ORIGIN, nodeEnv),
     corsCredentials: parseBool(raw.CORS_CREDENTIALS, false),
     trustProxy: parseTrustProxy(raw.TRUST_PROXY),
@@ -189,6 +195,25 @@ function envTransform(raw: z.infer<typeof rawEnvSchema>) {
 }
 
 const envSchema = rawEnvSchema.transform(envTransform).superRefine((out, ctx) => {
+  if (out.rateLimitRedisUrl !== undefined) {
+    try {
+      const parsed = new URL(out.rateLimitRedisUrl);
+      if (parsed.protocol !== "redis:" && parsed.protocol !== "rediss:") {
+        ctx.addIssue({
+          code: "custom",
+          message: "RATE_LIMIT_REDIS_URL must use redis:// or rediss:// scheme",
+          path: ["RATE_LIMIT_REDIS_URL"],
+        });
+      }
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "RATE_LIMIT_REDIS_URL must be a valid URL",
+        path: ["RATE_LIMIT_REDIS_URL"],
+      });
+    }
+  }
+
   if (out.observabilityTracingEnabled && out.observabilityTracingExporter === "otlp") {
     const ep = out.observabilityOtlpTracesEndpoint;
     if (ep === undefined || ep.length === 0) {

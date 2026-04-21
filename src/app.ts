@@ -1,4 +1,5 @@
 import "./config/zod-openapi-init.js";
+import type { Store } from "express-rate-limit";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -9,13 +10,19 @@ import { httpMetricsMiddleware } from "./common/http/middleware/metrics.middlewa
 import { bindRequestContext } from "./common/middlewares/bind-request-context.js";
 import { errorHandler } from "./common/middlewares/error-handler.js";
 import { httpLogger, requestLifecycleLogger } from "./common/middlewares/http-logger.js";
-import { httpRateLimiter } from "./common/middlewares/http-rate-limit.js";
+import { createHttpRateLimiter } from "./common/middlewares/http-rate-limit.js";
 import { env } from "./config/env.js";
 import { registerPrometheusMetricsRoute } from "./observability/metrics.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 
-export function createApp(): express.Express {
+export type CreateAppOptions = {
+  /** When set, HTTP rate limits are counted in Redis (safe behind multiple replicas). */
+  rateLimitStore?: Store;
+};
+
+export function createApp(options: CreateAppOptions = {}): express.Express {
   const app = express();
+  const httpRateLimiter = createHttpRateLimiter(options.rateLimitStore);
 
   app.set("trust proxy", env.trustProxy);
   app.disable("x-powered-by");

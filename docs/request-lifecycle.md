@@ -15,7 +15,7 @@ After **Helmet** and **CORS**:
 | 1    | **`bindRequestContext`**              | **`requestStartedAtMs`**, **`ensureRequestId`** → **`req.id`**, **`X-Request-Id`**, **`runWithContext(requestId)`** (ALS)                      |
 | 2    | **`httpLogger`** (`pino-http`)        | **`genReqId`** / **`ensureRequestId`** (idempotent); **`autoLogging: false`**                                                                  |
 | 3    | **`requestLifecycleLogger`**          | Log **`phase: "start"`**; register **`finish`** / **`close`** → one **`phase: "complete"`** line                                               |
-| 4    | **`httpRateLimiter`**                 | Rate limiting                                                                                                                                  |
+| 4    | **`createHttpRateLimiter`** output    | Rate limiting (in-memory, or **Redis** when **`RATE_LIMIT_REDIS_URL`** is set in **`server.ts`**)                                              |
 | 5    | **`express.json`** / **`urlencoded`** | Body parsing                                                                                                                                   |
 | —    | Feature routers                       | Optional **`validateRequest`**, auth, controllers                                                                                              |
 | —    | **404** handler                       | JSON not found                                                                                                                                 |

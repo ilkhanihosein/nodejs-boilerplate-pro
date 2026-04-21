@@ -27,6 +27,8 @@ This file is the **narrative contract** for what this codebase is meant to be. T
   - be implemented behind an abstraction that can switch to a **shared store** (e.g. Redis), or
   - be **clearly documented** as single-instance-only with a migration path.
 
+**HTTP rate limiting:** optional **`RATE_LIMIT_REDIS_URL`** enables a **Redis**-backed store so limits are consistent across replicas; omit it for the default in-memory store (single process).
+
 Do not assume sticky sessions unless they are explicitly configured and documented.
 
 ---

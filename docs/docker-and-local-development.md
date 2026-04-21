@@ -6,10 +6,11 @@ How **`docker-compose.yml`** and the **`Dockerfile`** fit together for local ful
 
 ## Compose layout
 
-| Service   | Role                                                                                    |
-| --------- | --------------------------------------------------------------------------------------- |
-| **mongo** | MongoDB 7, port **27017** published to the host, data in named volume **`mongo_data`**. |
-| **api**   | Image built from the repo **`Dockerfile`**, depends on **mongo**.                       |
+| Service   | Role                                                                                     |
+| --------- | ---------------------------------------------------------------------------------------- |
+| **mongo** | MongoDB 7, port **27017** published to the host, data in named volume **`mongo_data`**.  |
+| **redis** | Redis 7 (Alpine), port **6379** on the host—optional backing store for HTTP rate limits. |
+| **api**   | Image built from the repo **`Dockerfile`**, depends on **mongo** and **redis**.          |
 
 The API container receives **`MONGODB_URI=mongodb://mongo:27017/ecommerce`** inside the Compose network (hostname **`mongo`**, not `127.0.0.1`).
 
