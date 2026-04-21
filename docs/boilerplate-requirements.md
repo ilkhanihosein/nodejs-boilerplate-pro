@@ -21,7 +21,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 - **OpenAPI 3** — **Partially done:** Swagger UI at **`/docs`**; spec **generated from Zod** in **`src/api/v1/openapi.ts`** via **`@asteasolutions/zod-to-openapi`** (request shapes reuse validation schemas). **CI:** **`npm run openapi:check`** (in **`npm run check`**) fails if **`generated/openapi.json`** drifts from **`buildOpenApiV1Document()`**; regenerate with **`npm run openapi:generate`**. **Still open:** splitting large path lists per module (if registries grow), and tightening any remaining **response** schemas.
 - **API version** — **Done:** **`X-API-Version`** on all responses under the versioned API router; **`apiVersion`** on **`errorHandler`** JSON, **`/health`**, **`/health/ready`**, sample **`GET`** handlers under v1, and **404** under **`API_V1_PREFIX`**. Configure with **`API_VERSION`** (default **`1`**). Optional **`GIT_SHA`** on health for deploys.
-- **Pagination / filtering / sorting** — **Partially done:** shared **offset** and **cursor** query schemas + **`resolveOffsetPagination`** in **`src/common/http/offset-pagination.ts`**. **Still open:** a documented **sort** convention and adoption on real list endpoints (wire `validateRequest` + these schemas).
+- **Pagination / filtering / sorting** — **Done (sample list):** **`GET /api/v1/users`** uses **`offsetPaginationQuerySchema`** + **`sortQuerySchema`** and returns **`page`**, **`limit`**, **`total`**, **`items`** (see **`docs/http-list-endpoints.md`**). **Still open:** adopt the same pattern on other collection routes as you add them; **cursor** pagination remains a helper-only sample until a route uses it.
 
 ### 2. Observability and operations
 
@@ -30,8 +30,8 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 ### 3. Security and multi-instance production
 
 - **In-memory rate limiting** — **Done (optional Redis):** set **`RATE_LIMIT_REDIS_URL`** to **`redis://`** or **`rediss://`** for **`rate-limit-redis`** + **`node-redis`** in **`server.ts`**; Compose includes a **`redis`** service (uncomment **`RATE_LIMIT_REDIS_URL`** on **`api`** when needed). Single-instance default remains in-memory.
-- **Dependabot / Renovate** for dependencies.
-- Run **`npm audit`** (or equivalent) in CI with an explicit policy (fail vs report-only).
+- **Dependabot / Renovate** — **Done (Dependabot):** **`.github/dependabot.yml`** weekly **npm** updates.
+- **`npm audit` in CI** — **Done:** workflow runs **`npm audit --audit-level=high`** (fails on **high** and **critical** only); tighten policy in **`docs/ci-and-git-hooks.md`** if needed.
 - If **cookies / sessions** are added later, document **CSRF** and the threat model; today JWT Bearer is the pattern and is common for SPAs.
 
 ### 4. A “general” data layer
@@ -50,7 +50,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 6. Testing and delivery quality
 
-- **Coverage thresholds** (Vitest coverage + minimum % in CI).
+- **Coverage thresholds** — **Done:** **`vitest.config.ts`** V8 thresholds; **`npm run test:ci`** runs **`vitest run --coverage`** in CI.
 - **API contract** tests or OpenAPI-derived smoke tests (optional but valuable).
 - **Load testing** / k6 as a separate script (even a tiny example).
 
@@ -58,22 +58,22 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 - **Build/push image** workflow to a registry, **semver tags**, **CHANGELOG**—today CI only runs `check` on PRs.
 - Sample **Helm chart** or **minimal Kubernetes manifests** for teams that do not use Compose.
-- **`.nvmrc`** / **`engines` aligned with CI** (CI uses Node 22 while `engines` is only `>=20`; pin one version for the team).
+- **`.nvmrc` / `engines` / CI Node** — **Done:** **`.nvmrc`** is **22**; **`engines`** is **`>=22.0.0 <23`**; **`actions/setup-node`** uses **`node-version-file: ".nvmrc"`**.
 
 ### 8. Repository identity as a generic boilerplate
 
-- **README** still reads “HTTP API boilerplate” while **`package.json`** uses an e-commerce name; for a public fork, use a **single name/description** and a short **“how to strip the users/auth sample”** section at the top of the README.
+- **README + package identity** — **Done:** **`package.json`** name **`http-api-boilerplate`**, README documents **Node 22**, **`SERVICE_NAME`** for **`/health`**, and a **“Removing the sample `auth` and `users` modules”** section.
 
 ---
 
 ## 1. Runtime and language
 
-| ID   | Requirement                                                | Level | Acceptance (summary)                                        | Status in this repo                                                    |
-| ---- | ---------------------------------------------------------- | ----- | ----------------------------------------------------------- | ---------------------------------------------------------------------- |
-| R1.1 | Pinned Node (LTS) and CI alignment                         | Must  | `engines` + workflow on the same line; not “any Node works” | Partial: CI on 22, `engines` only `>=20`—tighter alignment is a Should |
-| R1.2 | TypeScript strict mode                                     | Must  | `strict` and no silent `any` per team rules                 | Done                                                                   |
-| R1.3 | ESM module graph and clear resolution                      | Must  | `"type": "module"` or equivalent; consistent imports        | Done                                                                   |
-| R1.4 | Standard scripts (`dev`, `build`, `start`, `test`, `lint`) | Must  | README one-screen quick start                               | Done                                                                   |
+| ID   | Requirement                                                | Level | Acceptance (summary)                                        | Status in this repo                                                                |
+| ---- | ---------------------------------------------------------- | ----- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| R1.1 | Pinned Node (LTS) and CI alignment                         | Must  | `engines` + workflow on the same line; not “any Node works” | Done: **`.nvmrc` 22**, **`engines` `>=22.0.0 <23`**, **`node-version-file`** in CI |
+| R1.2 | TypeScript strict mode                                     | Must  | `strict` and no silent `any` per team rules                 | Done                                                                               |
+| R1.3 | ESM module graph and clear resolution                      | Must  | `"type": "module"` or equivalent; consistent imports        | Done                                                                               |
+| R1.4 | Standard scripts (`dev`, `build`, `start`, `test`, `lint`) | Must  | README one-screen quick start                               | Done                                                                               |
 
 ---
 
@@ -89,14 +89,14 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ## 3. HTTP layer and API contract
 
-| ID   | Requirement                                                     | Level  | Acceptance                                             | Status in this repo                                                           |
-| ---- | --------------------------------------------------------------- | ------ | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| R3.1 | Versioned public API prefix                                     | Should | e.g. configurable `/api/v1`                            | Done                                                                          |
-| R3.2 | Consistent JSON error shape (code, message, optional `details`) | Must   | Predictable validation and 404 behavior                | Done                                                                          |
-| R3.3 | Edge validation (body/query/params)                             | Must   | One pattern across the codebase                        | Done                                                                          |
-| R3.4 | Documented pagination/filter contract (pattern or helper)       | Should | Docs or sample code; front-end does not guess          | Partial: `src/common/http/offset-pagination.ts`; sort + real lists still open |
-| R3.5 | OpenAPI (or equivalent) for v1                                  | Should | Generated or hand-maintained; CI can validate artifact | Partial: `/docs` + Zod-driven `openapi.ts`; CI/spec sync still open           |
-| R3.6 | Body size limits and content handling                           | Must   | Protection against huge payloads                       | Done                                                                          |
+| ID   | Requirement                                                     | Level  | Acceptance                                             | Status in this repo                                                                                          |
+| ---- | --------------------------------------------------------------- | ------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| R3.1 | Versioned public API prefix                                     | Should | e.g. configurable `/api/v1`                            | Done                                                                                                         |
+| R3.2 | Consistent JSON error shape (code, message, optional `details`) | Must   | Predictable validation and 404 behavior                | Done                                                                                                         |
+| R3.3 | Edge validation (body/query/params)                             | Must   | One pattern across the codebase                        | Done                                                                                                         |
+| R3.4 | Documented pagination/filter contract (pattern or helper)       | Should | Docs or sample code; front-end does not guess          | Done: helpers + **`GET /users`** offset + sort + **`total`**; checklist in **`docs/http-list-endpoints.md`** |
+| R3.5 | OpenAPI (or equivalent) for v1                                  | Should | Generated or hand-maintained; CI can validate artifact | Done: `/docs` + Zod registries + **`openapi:check`** in CI; optional response tightening per route           |
+| R3.6 | Body size limits and content handling                           | Must   | Protection against huge payloads                       | Done                                                                                                         |
 
 ---
 
@@ -109,7 +109,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 | R4.3 | Rate limiting with health exclusions                    | Must   | —                             | Done                                                                                              |
 | R4.4 | Configurable `trust proxy` for real client IP behind LB | Must   | Documented                    | Done                                                                                              |
 | R4.5 | Shared store for rate limit across replicas             | Should | Redis or “how to plug in” doc | Done: **`RATE_LIMIT_REDIS_URL`** + **`connect-rate-limit-redis.ts`**; Compose **`redis`** service |
-| R4.6 | Dependency automation (Dependabot / audit in CI)        | Should | Clear fail vs warn policy     | Dependabot not configured; audit not in CI                                                        |
+| R4.6 | Dependency automation (Dependabot / audit in CI)        | Should | Clear fail vs warn policy     | Done: **Dependabot** weekly npm; **`npm audit --audit-level=high`** in CI (documented)            |
 
 ---
 
@@ -158,11 +158,11 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ## 9. Testing and code quality
 
-| ID   | Requirement                                               | Level  | Acceptance            | Status in this repo        |
-| ---- | --------------------------------------------------------- | ------ | --------------------- | -------------------------- |
-| R9.1 | API integration tests without mandatory external services | Must   | In-memory DB or mocks | Done                       |
-| R9.2 | Pre-commit or equivalent (format/lint on staged)          | Should | —                     | Done (husky + lint-staged) |
-| R9.3 | Coverage thresholds in CI                                 | Could  | —                     | Not done                   |
+| ID   | Requirement                                               | Level  | Acceptance            | Status in this repo                                     |
+| ---- | --------------------------------------------------------- | ------ | --------------------- | ------------------------------------------------------- |
+| R9.1 | API integration tests without mandatory external services | Must   | In-memory DB or mocks | Done                                                    |
+| R9.2 | Pre-commit or equivalent (format/lint on staged)          | Should | —                     | Done (husky + lint-staged)                              |
+| R9.3 | Coverage thresholds in CI                                 | Could  | —                     | Done (`vitest` V8 thresholds in **`vitest.config.ts`**) |
 
 ---
 

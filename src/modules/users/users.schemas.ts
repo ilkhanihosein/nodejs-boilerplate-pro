@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { offsetPaginationQuerySchema } from "../../common/http/offset-pagination.js";
 import { sortQuerySchema } from "../../common/http/sort-query.js";
 import { USER_ROLES } from "./user.model.js";
 
@@ -16,7 +17,9 @@ export type UpdateRoleBody = z.infer<typeof updateRoleBodySchema>;
 /** Allowed `sort` fields for `GET /users` (same tuple passed to `mongoSortFromSortQuery` in `listUsers`). */
 export const USER_LIST_SORT_FIELDS = ["createdAt", "updatedAt", "email", "name", "role"] as const;
 
-export const usersListQuerySchema = sortQuerySchema(USER_LIST_SORT_FIELDS);
+export const usersListQuerySchema = offsetPaginationQuerySchema.extend(
+  sortQuerySchema(USER_LIST_SORT_FIELDS).shape,
+);
 
 export type UsersListQuery = z.infer<typeof usersListQuerySchema>;
 
@@ -32,6 +35,9 @@ export const userListItemResponseSchema = z
 
 export const usersListResponseSchema = z.object({
   items: z.array(userListItemResponseSchema),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  total: z.number().int().nonnegative(),
 });
 
 export const userItemResponseSchema = z.object({

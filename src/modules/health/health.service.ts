@@ -16,7 +16,7 @@ function mongoStateLabel(readyState: number): string {
 export function getHealthLivenessPayload(): HealthLivenessResponse {
   return {
     status: "ok",
-    service: "e-commerce-api",
+    service: env.serviceName,
     apiVersion: env.apiVersion,
     ...(env.gitSha ? { gitSha: env.gitSha } : {}),
   };
@@ -30,7 +30,7 @@ export function getHealthReadinessResult(): {
   const connected = readyState === mongoose.ConnectionStates.connected;
   const body: HealthReadyResponse = {
     status: connected ? "ready" : "not_ready",
-    service: "e-commerce-api",
+    service: env.serviceName,
     apiVersion: env.apiVersion,
     ...(env.gitSha ? { gitSha: env.gitSha } : {}),
     mongo: {

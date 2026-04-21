@@ -15,6 +15,12 @@ Integration and unit tests use **Vitest**. HTTP-level tests use **supertest** ag
 
 ---
 
+## Coverage
+
+**`npm run test:ci`** runs **`vitest run --coverage`** (V8 provider). Global thresholds live in **`vitest.config.ts`** under **`test.coverage.thresholds`** (currently modest floors so CI stays green on the sample suite); raise them and widen tests as the project grows. Adjust **`coverage.include`** / **`exclude`** if paths such as **`server.ts`** or observability glue should not count toward the same bar.
+
+---
+
 ## Environment during tests
 
 **`vitest.config.ts`** injects **`env`** for the test process so **`src/config/env.ts`** can import without a local **`.env`**:

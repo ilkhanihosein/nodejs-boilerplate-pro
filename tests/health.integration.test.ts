@@ -9,7 +9,7 @@ describe("GET /health", () => {
     const res = await request(app).get("/health").expect(200);
     expect(res.body).toMatchObject({
       status: "ok",
-      service: "e-commerce-api",
+      service: "http-api",
       apiVersion: env.apiVersion,
     });
   });
@@ -21,7 +21,7 @@ describe("GET /health/ready", () => {
     const res = await request(app).get("/health/ready").expect(503);
     expect(res.body).toMatchObject({
       status: "not_ready",
-      service: "e-commerce-api",
+      service: "http-api",
       apiVersion: env.apiVersion,
       mongo: { state: "disconnected", readyState: 0 },
     });

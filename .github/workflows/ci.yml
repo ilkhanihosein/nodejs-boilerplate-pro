@@ -12,8 +12,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: npm
       - run: npm ci
-      # format, lint, test, typecheck:frontend, build, openapi:check (generated/openapi.json drift)
+      # Fail only on high+; see docs/ci-and-git-hooks.md to tighten or add --production.
+      - run: npm audit --audit-level=high
+      # format, lint, test+coverage, typecheck:frontend, build, openapi:check
       - run: npm run check

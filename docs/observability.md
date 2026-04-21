@@ -50,7 +50,7 @@ Start the API (`npm run dev`), hit any route, and watch the terminal for span ob
 OBSERVABILITY_TRACING_ENABLED=true
 OBSERVABILITY_TRACING_EXPORTER=otlp
 OBSERVABILITY_OTLP_TRACES_ENDPOINT=http://127.0.0.1:4318/v1/traces
-OBSERVABILITY_SERVICE_NAME=e-commerce-api
+OBSERVABILITY_SERVICE_NAME=http-api
 ```
 
 Point the URL at an [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) or any OTLP/HTTP-compatible receiver (Jaeger 1.35+ OTLP, Grafana Tempo, etc.).
@@ -89,7 +89,7 @@ You should see default `process_*` lines plus `http_requests_total`, `http_reque
 
 ```yaml
 scrape_configs:
-  - job_name: e-commerce-api
+  - job_name: http-api
     metrics_path: /metrics
     static_configs:
       - targets: ["host.docker.internal:3000"]

@@ -12,7 +12,7 @@ These files describe **how this boilerplate is wired**, so you can keep the patt
 | [openapi-client-guide.md](./openapi-client-guide.md)                         | Type-safe frontend client: codegen, `createApi`, manual vs generated, workflow.           |
 | [architecture.md](./architecture.md)                                         | Layers (`api` vs `modules`), adapting the template.                                       |
 | [authentication-and-authorization.md](./authentication-and-authorization.md) | JWT access/refresh, `jwt.utils` + `auth.service`, sessions, `requireAuth`, `requireRole`. |
-| [ci-and-git-hooks.md](./ci-and-git-hooks.md)                                 | GitHub Actions `check`, Husky, lint-staged.                                               |
+| [ci-and-git-hooks.md](./ci-and-git-hooks.md)                                 | GitHub Actions (`check`, audit, coverage), Dependabot, Husky, lint-staged.                |
 | [database-migrations-and-seeding.md](./database-migrations-and-seeding.md)   | migrate-mongo scripts, authoring migrations, optional seed.                               |
 | [docker-and-local-development.md](./docker-and-local-development.md)         | Compose services, Dockerfile, health URLs, local vs container Mongo URI.                  |
 | [env-configuration.md](./env-configuration.md)                               | All environment variables, defaults, and `env` fail-fast behavior.                        |

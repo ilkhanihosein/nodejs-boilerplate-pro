@@ -16,5 +16,17 @@ export default defineConfig({
       JWT_REFRESH_SECRET: testJwtRefreshSecret,
       MONGODB_URI: testMongoUri,
     },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "text-summary"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.d.ts", "src/types/**"],
+      thresholds: {
+        lines: 55,
+        statements: 55,
+        branches: 44,
+        functions: 58,
+      },
+    },
   },
 });

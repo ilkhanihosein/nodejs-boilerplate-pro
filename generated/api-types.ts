@@ -583,11 +583,13 @@ export interface paths {
         };
         /**
          * List users (admin)
-         * @description Returns all users. Optional query `sort` uses format `field:asc` or `field:desc` (whitelist and examples are on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, the default order is newest first by `createdAt` (Mongo `{ createdAt: -1 }`).
+         * @description Paginated user list. Query: `page` (default 1), `limit` (default 20, max 100), optional `sort` as `field:asc` or `field:desc` (whitelist on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, default order is newest first by `createdAt` (`{ createdAt: -1 }`). Response includes `total` matching count.
          */
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     /** @description Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, createdAt:asc. */
                     sort?: string;
                 };
@@ -613,6 +615,9 @@ export interface paths {
                             } & {
                                 [key: string]: unknown;
                             })[];
+                            page: number;
+                            limit: number;
+                            total: number;
                         };
                     };
                 };

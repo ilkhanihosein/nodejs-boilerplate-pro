@@ -137,6 +137,8 @@ const rawEnvSchema = z.object({
   API_VERSION: z.string().optional(),
   API_DOCS_ENABLED: z.string().optional(),
   GIT_SHA: z.string().optional(),
+  /** Short name in `/health` JSON `service` field (defaults to `http-api`). */
+  SERVICE_NAME: z.string().optional(),
   JWT_ACCESS_SECRET: z
     .string()
     .trim()
@@ -178,6 +180,7 @@ function envTransform(raw: z.infer<typeof rawEnvSchema>) {
     apiVersion: raw.API_VERSION?.trim() || "1",
     apiDocsEnabled: parseBool(raw.API_DOCS_ENABLED, nodeEnv !== "production"),
     gitSha: raw.GIT_SHA?.trim() || undefined,
+    serviceName: raw.SERVICE_NAME?.trim() || "http-api",
     jwtAccessSecret: raw.JWT_ACCESS_SECRET,
     jwtAccessTtl: raw.JWT_ACCESS_TTL?.trim() || "15m",
     jwtRefreshSecret: raw.JWT_REFRESH_SECRET,

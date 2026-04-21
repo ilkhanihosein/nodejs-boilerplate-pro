@@ -10,8 +10,16 @@ export function toUserListItem(doc: UserLeanPublic): UserListItem {
   };
 }
 
-export function toUsersListResponse(docs: UserLeanPublic[]): UsersListResponse {
-  return { items: docs.map(toUserListItem) };
+export function toUsersListResponse(
+  docs: UserLeanPublic[],
+  meta: { page: number; limit: number; total: number },
+): UsersListResponse {
+  return {
+    items: docs.map(toUserListItem),
+    page: meta.page,
+    limit: meta.limit,
+    total: meta.total,
+  };
 }
 
 export function toUserItemResponse(doc: UserLeanPublic): UserItemResponse {

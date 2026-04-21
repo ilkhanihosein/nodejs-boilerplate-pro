@@ -8,13 +8,17 @@ Automation that keeps **`npm run check`** green before code lands on the default
 
 Workflow: **`.github/workflows/ci.yml`**
 
-| Trigger                                                    | Job       | Steps (summary)                                                         |
-| ---------------------------------------------------------- | --------- | ----------------------------------------------------------------------- |
-| Push to **`main`** / **`master`**, or any **pull_request** | **check** | Checkout → Node **22** + npm cache → **`npm ci`** → **`npm run check`** |
+| Trigger                                                    | Job       | Steps (summary)                                                                                                                                                        |
+| ---------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Push to **`main`** / **`master`**, or any **pull_request** | **check** | Checkout → Node from **`.nvmrc`** (`actions/setup-node` **`node-version-file`**) + npm cache → **`npm ci`** → **`npm audit --audit-level=high`** → **`npm run check`** |
 
-**`npm run check`** runs, in order: **Prettier** (`format:check`), **ESLint**, **Vitest** (`test:ci`), **TypeScript** (`build`). Failing any step fails the job.
+**`npm run check`** runs, in order: **Prettier** (`format:check`), **ESLint**, **Vitest** with **coverage** (`test:ci` — thresholds in **`vitest.config.ts`**), **frontend** `tsc`, **`npm run build`**, **`openapi:check`**. Failing any step fails the job.
 
-To add steps (for example **audit** or **migrations** against a service container), extend the workflow; document new expectations in this file or in [troubleshooting.md](./troubleshooting.md).
+**`npm audit`:** the workflow fails on **high** and **critical** advisories only (see npm **`--audit-level`**). Tighten to **`moderate`** or add **`--production`** if your team policy requires it.
+
+**Dependabot:** **`.github/dependabot.yml`** opens weekly **npm** update PRs for the repo root.
+
+To add steps (for example **migrations** against a service container), extend the workflow; document new expectations in this file or in [troubleshooting.md](./troubleshooting.md).
 
 ---
 

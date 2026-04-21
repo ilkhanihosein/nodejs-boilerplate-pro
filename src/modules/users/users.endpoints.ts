@@ -21,7 +21,7 @@ const listUsersEndpoint = defineProtectedEndpoint({
   tags: ["Users"],
   summary: "List users (admin)",
   description:
-    "Returns all users. Optional query `sort` uses format `field:asc` or `field:desc` (whitelist and examples are on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, the default order is newest first by `createdAt` (Mongo `{ createdAt: -1 }`).",
+    "Paginated user list. Query: `page` (default 1), `limit` (default 20, max 100), optional `sort` as `field:asc` or `field:desc` (whitelist on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, default order is newest first by `createdAt` (`{ createdAt: -1 }`). Response includes `total` matching count.",
   security: [{ bearerAuth: [] }],
   middlewares: [requireRole("admin")],
   request: { query: usersListQuerySchema },

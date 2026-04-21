@@ -1,4 +1,5 @@
 import { AppError } from "../../common/errors/app-error.js";
+import { resolveOffsetPagination } from "../../common/http/offset-pagination.js";
 import {
   DEFAULT_MONGO_SORT_CREATED_AT_DESC,
   mongoSortFromSortQuery,
@@ -18,13 +19,22 @@ import {
 
 export async function listUsers(query: UsersListQuery): Promise<UsersListResponse> {
   getLogger().debug({ event: "list_users" }, "list_users");
+  const { page, limit, skip } = resolveOffsetPagination(query);
   const sort = mongoSortFromSortQuery(
     query.sort,
     USER_LIST_SORT_FIELDS,
     DEFAULT_MONGO_SORT_CREATED_AT_DESC,
   );
-  const users = await UserModel.find({}, { passwordHash: 0 }).sort(sort).lean<UserLeanPublic[]>();
-  return toUsersListResponse(users);
+  const filter = {};
+  const [total, users] = await Promise.all([
+    UserModel.countDocuments(filter),
+    UserModel.find(filter, { passwordHash: 0 })
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean<UserLeanPublic[]>(),
+  ]);
+  return toUsersListResponse(users, { page, limit, total });
 }
 
 export async function getUserById(params: UserIdParams): Promise<UserItemResponse> {

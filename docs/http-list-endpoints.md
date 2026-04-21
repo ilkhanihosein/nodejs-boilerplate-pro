@@ -25,7 +25,7 @@ Use this for any **`GET`** that returns a **collection** (users, orders, etc.). 
 
 ## Reference implementation
 
-- [`src/modules/users/users.schemas.ts`](../src/modules/users/users.schemas.ts) — `sortQuerySchema` + list query.
+- [`src/modules/users/users.schemas.ts`](../src/modules/users/users.schemas.ts) — **`offsetPaginationQuerySchema.extend(sortQuerySchema(...).shape)`** for `GET /users`.
 - [`src/modules/users/users.endpoints.ts`](../src/modules/users/users.endpoints.ts) — `request.query` + responses.
 - [`src/modules/users/users.service.ts`](../src/modules/users/users.service.ts) — **`mongoSortFromSortQuery`** + **`find().sort()`**.
 
