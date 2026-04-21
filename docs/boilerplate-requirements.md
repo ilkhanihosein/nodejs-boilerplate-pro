@@ -25,9 +25,7 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ### 2. Observability and operations
 
-- **Tracing** (e.g. OpenTelemetry) correlated with existing logs.
-- **Metrics** (Prometheus `/metrics` or an exporter); today you mostly have logs, not gauges/counters/histograms.
-- Optional **APM / production error** integration (e.g. Sentry) driven by env.
+- **Tracing + Prometheus metrics** — **Done (opt-in via env, default off):** OpenTelemetry (`NodeSDK`: HTTP, Express, MongoDB) with **`http.route`** / **`app.http.status_type`** aligned to the same helpers as metrics; pino log fields **`traceId`** / **`spanId`** when tracing is on. **`GET /metrics`** exposes **`http_requests_total`**, **`http_request_duration_seconds`**, **`http_requests_in_flight`** (see **`docs/observability.md`**). **Still open:** optional **APM** (e.g. Sentry), **tail sampling** on the collector, and any team-specific dashboards or alerts.
 
 ### 3. Security and multi-instance production
 
@@ -117,12 +115,12 @@ The tables from **section 1 onward** are the normative requirement matrix. The *
 
 ## 5. Logging, request tracing, runtime errors
 
-| ID   | Requirement                                           | Level | Acceptance                         | Status in this repo |
-| ---- | ----------------------------------------------------- | ----- | ---------------------------------- | ------------------- |
-| R5.1 | Structured logging (JSON in prod)                     | Must  | —                                  | Done (pino)         |
-| R5.2 | Request id in header and logs                         | Must  | Debug correlation                  | Done                |
-| R5.3 | Policy for `unhandledRejection` / `uncaughtException` | Must  | Log + exit or explicit team policy | Done                |
-| R5.4 | Metrics or tracing (Prometheus / OTel)                | Could | For serious production             | Not done            |
+| ID   | Requirement                                           | Level | Acceptance                         | Status in this repo                                                                                   |
+| ---- | ----------------------------------------------------- | ----- | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| R5.1 | Structured logging (JSON in prod)                     | Must  | —                                  | Done (pino)                                                                                           |
+| R5.2 | Request id in header and logs                         | Must  | Debug correlation                  | Done                                                                                                  |
+| R5.3 | Policy for `unhandledRejection` / `uncaughtException` | Must  | Log + exit or explicit team policy | Done                                                                                                  |
+| R5.4 | Metrics or tracing (Prometheus / OTel)                | Could | For serious production             | Done (off by default): **`docs/observability.md`**; single-path HTTP metrics + OTel + log correlation |
 
 ---
 

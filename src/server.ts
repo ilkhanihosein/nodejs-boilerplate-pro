@@ -1,7 +1,9 @@
+import "./observability/tracing.js";
 import { createApp } from "./app.js";
 import { getLogger } from "./common/logger.js";
 import { connectMongo, disconnectMongo } from "./config/database.js";
 import { env } from "./config/env.js";
+import { shutdownTracing } from "./observability/tracing.js";
 import type { Server } from "node:http";
 import type { Socket } from "node:net";
 
@@ -111,6 +113,8 @@ async function bootstrap(): Promise<void> {
      */
     server.close((closeErr?: Error) => {
       void (async () => {
+        await shutdownTracing();
+
         let mongoDisconnectFailed = false;
 
         try {

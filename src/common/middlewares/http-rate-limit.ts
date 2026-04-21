@@ -10,5 +10,6 @@ export const httpRateLimiter = rateLimit({
     req.path === "/health" ||
     req.path.startsWith("/health/") ||
     req.path === "/docs" ||
-    req.path.startsWith("/docs/"),
+    req.path.startsWith("/docs/") ||
+    req.path === "/metrics",
 });

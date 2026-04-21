@@ -37,6 +37,26 @@ function parseBool(value: string | undefined, fallback: boolean): boolean {
   return fallback;
 }
 
+function parseTracingExporter(value: string | undefined): "console" | "otlp" {
+  const raw = value?.trim().toLowerCase();
+  if (raw === "otlp") {
+    return "otlp";
+  }
+  return "console";
+}
+
+/** Root trace sampling probability for `ParentBasedSampler` + `TraceIdRatioBasedSampler` (0–1 inclusive). */
+function parseTraceSamplingRatio(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") {
+    return 0.1;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    return 0.1;
+  }
+  return n;
+}
+
 /** Express `trust proxy`: false off; positive int = number of proxy hops (1 = single reverse proxy). */
 function parseTrustProxy(value: string | undefined): boolean | number {
   const raw = value?.trim();
@@ -125,9 +145,16 @@ const rawEnvSchema = z.object({
     .min(1, "JWT_REFRESH_SECRET must be set (e.g. in .env); no default is applied"),
   JWT_ACCESS_TTL: z.string().optional(),
   JWT_REFRESH_TTL: z.string().optional(),
+  OBSERVABILITY_TRACING_ENABLED: z.string().optional(),
+  OBSERVABILITY_METRICS_ENABLED: z.string().optional(),
+  OBSERVABILITY_TRACING_EXPORTER: z.string().optional(),
+  OBSERVABILITY_OTLP_TRACES_ENDPOINT: z.string().optional(),
+  OBSERVABILITY_SERVICE_NAME: z.string().optional(),
+  OBSERVABILITY_TRACE_SAMPLING_RATIO: z.string().optional(),
+  OBSERVABILITY_ANONYMIZE_IP: z.string().optional(),
 });
 
-const envSchema = rawEnvSchema.transform((raw) => {
+function envTransform(raw: z.infer<typeof rawEnvSchema>) {
   const nodeEnv = raw.NODE_ENV ?? "development";
   const apiV1Prefix = parseApiV1Prefix(raw.API_V1_PREFIX);
   return {
@@ -149,7 +176,40 @@ const envSchema = rawEnvSchema.transform((raw) => {
     jwtAccessTtl: raw.JWT_ACCESS_TTL?.trim() || "15m",
     jwtRefreshSecret: raw.JWT_REFRESH_SECRET,
     jwtRefreshTtl: raw.JWT_REFRESH_TTL?.trim() || "7d",
+    observabilityTracingEnabled: parseBool(raw.OBSERVABILITY_TRACING_ENABLED, false),
+    observabilityMetricsEnabled: parseBool(raw.OBSERVABILITY_METRICS_ENABLED, false),
+    observabilityTracingExporter: parseTracingExporter(raw.OBSERVABILITY_TRACING_EXPORTER),
+    observabilityOtlpTracesEndpoint: raw.OBSERVABILITY_OTLP_TRACES_ENDPOINT?.trim() || undefined,
+    observabilityServiceName: raw.OBSERVABILITY_SERVICE_NAME?.trim() || "http-api",
+    observabilityTraceSamplingRatio: parseTraceSamplingRatio(
+      raw.OBSERVABILITY_TRACE_SAMPLING_RATIO,
+    ),
+    observabilityAnonymizeIp: parseBool(raw.OBSERVABILITY_ANONYMIZE_IP, false),
   };
+}
+
+const envSchema = rawEnvSchema.transform(envTransform).superRefine((out, ctx) => {
+  if (out.observabilityTracingEnabled && out.observabilityTracingExporter === "otlp") {
+    const ep = out.observabilityOtlpTracesEndpoint;
+    if (ep === undefined || ep.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "OBSERVABILITY_OTLP_TRACES_ENDPOINT is required when OBSERVABILITY_TRACING_EXPORTER is otlp and tracing is enabled",
+        path: ["OBSERVABILITY_OTLP_TRACES_ENDPOINT"],
+      });
+      return;
+    }
+    try {
+      void new URL(ep);
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "OBSERVABILITY_OTLP_TRACES_ENDPOINT must be a valid absolute URL",
+        path: ["OBSERVABILITY_OTLP_TRACES_ENDPOINT"],
+      });
+    }
+  }
 });
 
 export type Env = z.infer<typeof envSchema>;

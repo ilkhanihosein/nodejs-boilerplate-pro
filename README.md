@@ -2,7 +2,7 @@
 
 **Node.js 20+**, **TypeScript**, **Express 5**, **MongoDB** (Mongoose) starter for JSON HTTP APIs: validated config, structured logging, security defaults, rate limiting, centralized errors, versioned routing, tests (**Vitest** + **supertest**), optional **Docker Compose** with MongoDB.
 
-**Stack:** Express, Mongoose, Zod (config + request parsing), pino, migrate-mongo.
+**Stack:** Express, Mongoose, Zod (config + request parsing), pino, migrate-mongo. **Optional observability:** OpenTelemetry tracing and Prometheus **`/metrics`** (see **[`docs/observability.md`](./docs/observability.md)**).
 
 **Using this as a base:** clone or fork, then **rename** the package in `package.json`, **trim or replace** anything under `src/modules/` you do not need, **adjust** `src/config/env.ts` and `.env.example` for your env vars, and **rewire** `src/api/v1/routes.ts` to your feature routers. The sample layout is a starting point—not a product you must keep.
 

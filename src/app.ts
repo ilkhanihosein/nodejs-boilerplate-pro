@@ -5,11 +5,13 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { apiV1Router } from "./api/v1/routes.js";
 import { buildOpenApiV1Document } from "./api/v1/openapi.js";
+import { httpMetricsMiddleware } from "./common/http/middleware/metrics.middleware.js";
 import { bindRequestContext } from "./common/middlewares/bind-request-context.js";
 import { errorHandler } from "./common/middlewares/error-handler.js";
 import { httpLogger, requestLifecycleLogger } from "./common/middlewares/http-logger.js";
 import { httpRateLimiter } from "./common/middlewares/http-rate-limit.js";
 import { env } from "./config/env.js";
+import { registerPrometheusMetricsRoute } from "./observability/metrics.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 
 export function createApp(): express.Express {
@@ -17,6 +19,7 @@ export function createApp(): express.Express {
 
   app.set("trust proxy", env.trustProxy);
   app.disable("x-powered-by");
+  registerPrometheusMetricsRoute(app);
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -42,6 +45,9 @@ export function createApp(): express.Express {
     }),
   );
   app.use(bindRequestContext);
+  if (env.observabilityMetricsEnabled) {
+    app.use(httpMetricsMiddleware);
+  }
   app.use(httpLogger);
   app.use(requestLifecycleLogger);
   app.use(httpRateLimiter);
