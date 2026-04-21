@@ -568,10 +568,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List users (admin) */
+        /**
+         * List users (admin)
+         * @description Returns all users. Optional query `sort` uses format `field:asc` or `field:desc` (whitelist and examples are on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, the default order is newest first by `createdAt` (Mongo `{ createdAt: -1 }`).
+         */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, updatedAt:asc. */
+                    sort?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -593,6 +599,20 @@ export interface paths {
                             } & {
                                 [key: string]: unknown;
                             })[];
+                        };
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                            code: string;
+                            apiVersion: string;
+                            details: unknown[];
                         };
                     };
                 };

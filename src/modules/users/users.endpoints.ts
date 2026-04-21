@@ -10,6 +10,7 @@ import {
   updateRoleBodySchema,
   userIdParamsSchema,
   userItemResponseSchema,
+  usersListQuerySchema,
   usersListResponseSchema,
 } from "./users.schemas.js";
 import { getUserById, listUsers, updateUserRole } from "./users.service.js";
@@ -19,18 +20,22 @@ const listUsersEndpoint = defineProtectedEndpoint({
   path: "/",
   tags: ["Users"],
   summary: "List users (admin)",
+  description:
+    "Returns all users. Optional query `sort` uses format `field:asc` or `field:desc` (whitelist and examples are on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, the default order is newest first by `createdAt` (Mongo `{ createdAt: -1 }`).",
   security: [{ bearerAuth: [] }],
   middlewares: [requireRole("admin")],
+  request: { query: usersListQuerySchema },
   responses: {
     200: {
       description: "User list",
       schema: usersListResponseSchema,
     },
+    400: { description: "Validation error", schema: validationErrorResponseSchema },
     401: { description: "Unauthorized", schema: appErrorResponseSchema },
     403: { description: "Forbidden (not admin)", schema: appErrorResponseSchema },
   },
-  handler: async ({ json }) => {
-    json(200, await listUsers());
+  handler: async ({ validated, json }) => {
+    json(200, await listUsers(validated.query));
   },
 });
 

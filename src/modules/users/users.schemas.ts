@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortQuerySchema } from "../../common/http/sort-query.js";
 import { USER_ROLES } from "./user.model.js";
 
 export const userIdParamsSchema = z.object({
@@ -11,6 +12,13 @@ export const updateRoleBodySchema = z.object({
 
 export type UserIdParams = z.infer<typeof userIdParamsSchema>;
 export type UpdateRoleBody = z.infer<typeof updateRoleBodySchema>;
+
+/** Allowed `sort` fields for `GET /users` (same tuple passed to `mongoSortFromSortQuery` in `listUsers`). */
+export const USER_LIST_SORT_FIELDS = ["createdAt", "updatedAt", "email", "name", "role"] as const;
+
+export const usersListQuerySchema = sortQuerySchema(USER_LIST_SORT_FIELDS);
+
+export type UsersListQuery = z.infer<typeof usersListQuerySchema>;
 
 /** Lean user document from Mongo (no `passwordHash`). */
 export const userListItemResponseSchema = z

@@ -90,6 +90,14 @@ if (data) {
 }
 ```
 
+Optional sorting uses the same `params.query` shape as OpenAPI (see **Sorting** below):
+
+```ts
+const { data } = await api.users.list({
+  params: { query: { sort: "email:asc" } },
+});
+```
+
 ### Low-level access (any generated path)
 
 If a route does not yet have a domain alias, use the typed client on `createApi`:
@@ -99,6 +107,19 @@ const { data, error } = await api.client.GET("/api/v1/hello", {
   params: { query: { name: "Ada" } },
 });
 ```
+
+---
+
+## Sorting
+
+List endpoints that support ordering use a single optional query parameter **`sort`**:
+
+- **Format:** `field:asc` or `field:desc` (directions are lowercase only). One field per request.
+- **Whitelist:** Each operation documents which field names are valid in OpenAPI on the `sort` parameter. Any other field name (or malformed token) returns **400** with the usual validation error shape.
+- **Default:** If you omit `sort` or send it empty, the server uses that operation’s default order. The route summary/description states what that is (for example, users list defaults to newest first by `createdAt`).
+- **Backend:** The server maps `asc` / `desc` to MongoDB `.sort()` for that single field (`1` / `-1`). Clients should not construct Mongo objects; rely on the documented `sort` string only.
+
+Regenerate types after changing sort fields on a route (`npm run openapi:generate`) so `params.query` stays accurate.
 
 ---
 

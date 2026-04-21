@@ -1,20 +1,29 @@
 import { AppError } from "../../common/errors/app-error.js";
+import {
+  DEFAULT_MONGO_SORT_CREATED_AT_DESC,
+  mongoSortFromSortQuery,
+} from "../../common/http/sort-query.js";
 import { getLogger } from "../../common/logger.js";
 import type { UserLeanPublic } from "./user.model.js";
 import { UserModel } from "./user.model.js";
 import { toUserItemResponse, toUsersListResponse } from "./users.mapper.js";
-import type {
-  UpdateRoleBody,
-  UserIdParams,
-  UserItemResponse,
-  UsersListResponse,
+import {
+  USER_LIST_SORT_FIELDS,
+  type UpdateRoleBody,
+  type UserIdParams,
+  type UserItemResponse,
+  type UsersListQuery,
+  type UsersListResponse,
 } from "./users.schemas.js";
 
-export async function listUsers(): Promise<UsersListResponse> {
+export async function listUsers(query: UsersListQuery): Promise<UsersListResponse> {
   getLogger().debug({ event: "list_users" }, "list_users");
-  const users = await UserModel.find({}, { passwordHash: 0 })
-    .sort({ createdAt: -1 })
-    .lean<UserLeanPublic[]>();
+  const sort = mongoSortFromSortQuery(
+    query.sort,
+    USER_LIST_SORT_FIELDS,
+    DEFAULT_MONGO_SORT_CREATED_AT_DESC,
+  );
+  const users = await UserModel.find({}, { passwordHash: 0 }).sort(sort).lean<UserLeanPublic[]>();
   return toUsersListResponse(users);
 }
 
