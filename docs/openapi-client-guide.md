@@ -23,7 +23,7 @@ This guide explains how the **backend HTTP API**, **OpenAPI description**, **cod
 2. **OpenAPI** — `buildOpenApiV1Document()` merges all registries into one OpenAPI 3.0.3 JSON-compatible object (paths like `/api/v1/auth/login`, components such as `bearerAuth`).
 3. **Generate script** — `npm run openapi:generate` runs `scripts/openapi-generate.ts`, which:
    - imports the same `buildOpenApiV1Document()` the app uses (so the spec is identical to what `/docs` would show);
-   - writes `generated/openapi.json` (ignored by git);
+   - writes `generated/openapi.json` (commit it so **`npm run openapi:check`** in CI can detect drift);
    - runs the local `openapi-typescript` CLI to overwrite **`generated/api-types.ts`**.
 4. **Types** — `generated/api-types.ts` exports a large `paths` interface: for each URL and HTTP method, TypeScript knows query, path, body, and response shapes.
 5. **Client** — `frontend/api/client.ts` creates an `openapi-fetch` client typed with `paths`. Every URL must be a key of `paths`, so typos in paths are compile errors.
@@ -130,17 +130,17 @@ Regenerate types after changing sort fields on a route (`npm run openapi:generat
 | Output / behavior                               | How                                                                                   |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **`generated/api-types.ts`**                    | Overwritten by `openapi-typescript` when you run `openapi:generate`. **Do not edit.** |
-| **`generated/openapi.json`**                    | Written each run; gitignored (intermediate file for the CLI).                         |
+| **`generated/openapi.json`**                    | Written each run; **versioned** so CI compares it to `buildOpenApiV1Document()`.      |
 | **Type checking of `frontend/` + `generated/`** | `npm run typecheck:frontend` (also part of `npm run check`).                          |
 
 ### Manual (developer actions)
 
-| Action                                | When                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`npm run openapi:generate`**        | After you change routes, request bodies, responses, or `API_V1_PREFIX` in a way that changes URLs — so TypeScript stays in sync with the server.                                                                                                                                                                                   |
-| **Commit `generated/api-types.ts`**   | Typical workflow: regenerate and commit the updated types so CI and teammates see the same contract.                                                                                                                                                                                                                               |
-| **Keep domain path literals aligned** | `frontend/api/index.ts` uses fixed path strings such as `"/api/v1/auth/login"`. They must remain valid **`keyof paths`** after regeneration. Default prefix is `/api/v1`; if you use a custom `API_V1_PREFIX`, regenerate and **update those literals** (or use `api.client` only with the new path keys from the generated file). |
-| **Env for the generate script**       | `openapi:generate` sets minimal `MONGODB_URI` and JWT secrets via `cross-env` so `src/config/env.ts` can load; your `.env` still applies for values like `API_V1_PREFIX` when present.                                                                                                                                             |
+| Action                                                         | When                                                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`npm run openapi:generate`**                                 | After you change routes, request bodies, responses, or `API_V1_PREFIX` in a way that changes URLs — so TypeScript stays in sync with the server.                                                                                                                                                                                   |
+| **Commit `generated/openapi.json` + `generated/api-types.ts`** | Regenerate and commit both so CI **`openapi:check`** and teammates match the same contract.                                                                                                                                                                                                                                        |
+| **Keep domain path literals aligned**                          | `frontend/api/index.ts` uses fixed path strings such as `"/api/v1/auth/login"`. They must remain valid **`keyof paths`** after regeneration. Default prefix is `/api/v1`; if you use a custom `API_V1_PREFIX`, regenerate and **update those literals** (or use `api.client` only with the new path keys from the generated file). |
+| **Env for the generate script**                                | `openapi:generate` sets minimal `MONGODB_URI` and JWT secrets via `cross-env` so `src/config/env.ts` can load; your `.env` still applies for values like `API_V1_PREFIX` when present.                                                                                                                                             |
 
 ---
 

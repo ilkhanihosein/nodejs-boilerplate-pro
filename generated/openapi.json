@@ -1,0 +1,1484 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HTTP API",
+    "version": "1",
+    "description": "Generated from Zod via @asteasolutions/zod-to-openapi. Routes are declared with `definePublicEndpoint` / `defineProtectedEndpoint` (see `src/common/http/define-endpoint.ts`) so request validation and OpenAPI stay aligned."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Same host as the API (see paths)."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Liveness",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Process is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "gitSha": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "service",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness (MongoDB connected)",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ready",
+                        "not_ready"
+                      ]
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "gitSha": {
+                      "type": "string"
+                    },
+                    "mongo": {
+                      "type": "object",
+                      "properties": {
+                        "readyState": {
+                          "type": "number"
+                        },
+                        "state": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "readyState",
+                        "state"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "service",
+                    "apiVersion",
+                    "mongo"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ready",
+                        "not_ready"
+                      ]
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "gitSha": {
+                      "type": "string"
+                    },
+                    "mongo": {
+                      "type": "object",
+                      "properties": {
+                        "readyState": {
+                          "type": "number"
+                        },
+                        "state": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "readyState",
+                        "state"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "service",
+                    "apiVersion",
+                    "mongo"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1": {
+      "get": {
+        "summary": "API v1 index",
+        "tags": [
+          "API v1"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "api": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "api",
+                    "apiVersion",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hello": {
+      "get": {
+        "summary": "Hello (validated query)",
+        "tags": [
+          "API v1"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "required": true,
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Greeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created; tokens issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "role"
+                      ]
+                    },
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "accessToken",
+                    "refreshToken"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "role"
+                      ]
+                    },
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "accessToken",
+                    "refreshToken"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "role"
+                      ]
+                    },
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "accessToken",
+                    "refreshToken"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or reused refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Logout (revoke refresh session)",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, or wrong-type token (logout uses refresh JWT only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Current user",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "role"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "summary": "List users (admin)",
+        "description": "Paginated user list. Query: `page` (default 1), `limit` (default 20, max 100), optional `sort` as `field:asc` or `field:desc` (whitelist on the `sort` parameter in OpenAPI). If `sort` is omitted or empty, default order is newest first by `createdAt` (`{ createdAt: -1 }`). Response includes `total` matching count.",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, createdAt:asc.",
+              "example": "createdAt:desc"
+            },
+            "required": false,
+            "description": "Query `sort` format: `field:asc` or `field:desc` (lowercase `asc`/`desc` only; one field per request). Only these field names are accepted (whitelist); anything else is a validation error: createdAt, updatedAt, email, name, role. If `sort` is omitted or empty, the operation uses its documented default order (not necessarily the same as one of the examples). Server maps this to MongoDB `.sort()` on that single field: `asc` → 1, `desc` → -1. Examples: createdAt:desc, createdAt:asc.",
+            "name": "sort",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "customer",
+                              "admin"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "_id",
+                          "name",
+                          "email",
+                          "role"
+                        ],
+                        "additionalProperties": {
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "limit",
+                    "total"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (not admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "summary": "Get user by id (admin)",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "_id",
+                        "name",
+                        "email",
+                        "role"
+                      ],
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/role": {
+      "patch": {
+        "summary": "Update user role (admin)",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "admin"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "item": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "customer",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "_id",
+                        "name",
+                        "email",
+                        "role"
+                      ],
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion",
+                    "details"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "apiVersion": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "code",
+                    "apiVersion"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
